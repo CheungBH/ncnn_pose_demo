@@ -152,7 +152,7 @@ static int detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int t
     return 0;
 }
 
-static int draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
+static cv::Mat draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
 {
     static const char* class_names[] = {"background", "person", "bicycle",
                                         "car", "motorbike", "aeroplane", "bus", "train", "truck",
@@ -203,18 +203,18 @@ static int draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, 
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
     }
 
-    cv::imshow("image", image);
+//    cv::imshow("image", image);
+//
+//    if (is_streaming)
+//    {
+//        cv::waitKey(1);
+//    }
+//    else
+//    {
+//        cv::waitKey(0);
+//    }
 
-    if (is_streaming)
-    {
-        cv::waitKey(1);
-    }
-    else
-    {
-        cv::waitKey(0);
-    }
-
-    return 0;
+    return image;
 }
 
 
@@ -568,9 +568,6 @@ int main(int argc, char** argv)
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
 
 
-
-
-
 //            std::cout << "x: " << object.rect.x << " y: " << object.rect.y << " width: " << object.rect.width << " height: " << object.rect.width << std::endl;
 //        }
 // #ifdef NCNN_PROFILING
@@ -602,6 +599,9 @@ int main(int argc, char** argv)
             draw_pose(*itr, skeletons[itr-imgs.begin()], is_streaming);
             print_topk(predictions[itr-imgs.begin()], 2);
         }
+        cv::imshow("img_cnt", im_cnt);
+        cv::imshow("drown_frame", drown_frame);
+        cv::waitKey(1);
 
 
         if (!is_streaming)
