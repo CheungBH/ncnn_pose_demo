@@ -1,0 +1,12 @@
+cmake*
+
+
+.idea/
+1.2.154.0/
+CNN_models/
+build/
+dev/
+pose_models/
+yolov4-tiny-opt.bin
+yolov4-tiny-opt.param
+
