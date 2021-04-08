@@ -11,7 +11,8 @@ include_directories("include")
 
 # Add source files
 file(GLOB SOURCE_FILES
-	"*.cpp")
+	"*.cpp"
+        "*.h")
 
 set(CMAKE_CXX_STANDARD 14)
 #find_package(Torch REQUIRED)
@@ -42,7 +43,6 @@ else()
         set(CMAKE_CXX_STANDARD 11)
     endif()
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}/../src)
     add_executable(underwater_st ${SOURCE_FILES})
     target_include_directories(underwater_st PRIVATE ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(underwater_st PRIVATE ncnn ${TORCH_LIBRARIES} ${OpenCV_LIBRARIES})
