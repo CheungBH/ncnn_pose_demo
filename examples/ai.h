@@ -30,11 +30,11 @@ namespace ncnn_ai {
 
     void cropImageFrom(std::vector <cv::Mat> &target, const cv::Mat &src, const std::vector <Object> &obj);
 
-    std::vector <KP> sppeOne(const cv::Mat &src);
+    std::vector <KP> sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet);
 
     void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints, int is_streaming);
 
-    std::vector<float> cnn(const cv::Mat &src);
+    std::vector<float> cnn(const cv::Mat &src, const ncnn::Net& cnnNet);
 
     int print_topk(const std::vector<float> &cls_scores, int topk);
 }

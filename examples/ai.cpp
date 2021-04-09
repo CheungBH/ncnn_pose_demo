@@ -72,13 +72,20 @@ int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int
     int img_w = bgr.cols;
     int img_h = bgr.rows;
 
+    auto start = std::chrono::steady_clock::now();
+
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, bgr.cols, bgr.rows, target_size, target_size);
 
     const float mean_vals[3] = {0, 0, 0};
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in.substract_mean_normalize(mean_vals, norm_vals);
 
-    auto start = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "yolo resize time: " << duration.count() << "s\n";
+
+    start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = yolov4->create_extractor();
 
     ex.input("data", in);
@@ -86,9 +93,9 @@ int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int
     ncnn::Mat out;
     ex.extract("output", out);
 
-    auto end = std::chrono::steady_clock::now();
+    end = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> duration = end - start;
+    duration = end - start;
     std::cout << "yolo extract time: " << duration.count() << "s\n";
 
     objects.clear();
@@ -191,22 +198,13 @@ void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, const cv::Mat &src, co
     return;
 }
 
-std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src)
+std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
 {
     std::vector<KP> target;
-    printf("sppeOne...\n");
-    static ncnn::Net sppeNet;
-    static bool is_loaded_sppe = false;
 
-    if(!is_loaded_sppe)
-    {
-        sppeNet.opt.use_vulkan_compute = true;
-
-        sppeNet.load_param(SPPE_PARAM);
-        sppeNet.load_model(SPPE_MODEL);
-        is_loaded_sppe = true;
-    }
     int w = src.cols, h = src.rows;
+
+    auto start = std::chrono::steady_clock::now();
 
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(src.data, ncnn::Mat::PIXEL_BGR2RGB, w, h, 256, 320);
 
@@ -214,7 +212,12 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src)
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in.substract_mean_normalize(mean_vals, norm_vals);
 
-    auto start = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "sppeNet resize time: " << duration.count() << "s\n";
+
+    start = std::chrono::steady_clock::now();
 
     ncnn::Extractor ex = sppeNet.create_extractor();
 
@@ -223,9 +226,9 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src)
     ncnn::Mat out;
     ex.extract("1123", out);
 
-    auto end = std::chrono::steady_clock::now();
+    end = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> duration = end - start;
+    duration = end - start;
     std::cout << "sppeNet extract time: " << duration.count() << "s\n";
 
 
@@ -286,7 +289,7 @@ void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
     {
         const KP& keypoint = keypoints[i];
 
-        fprintf(stderr, "%.2f %.2f = %.5f\n", keypoint.p.x, keypoint.p.y, keypoint.prob);
+        // fprintf(stderr, "%.2f %.2f = %.5f\n", keypoint.p.x, keypoint.p.y, keypoint.prob);
 
         if (keypoint.prob < 0.2f)
             continue;
@@ -307,27 +310,23 @@ void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
 //sPPE end
 
 //CNN begin
-std::vector<float> ncnn_ai::cnn(const cv::Mat &src)
+std::vector<float> ncnn_ai::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
 {
-    printf("cnn...\n");
     std::vector<float> target;
 
-    static ncnn::Net cnnNet;
-    static bool is_loaded_cnn = false;
-    if(!is_loaded_cnn)
-    {
-        cnnNet.opt.use_vulkan_compute = true;
+    auto start = std::chrono::steady_clock::now();
 
-        cnnNet.load_param(CNN_PARAM);
-        cnnNet.load_model(CNN_MODEL);
-        is_loaded_cnn = true;
-    }
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(src.data, ncnn::Mat::PIXEL_BGR, src.cols, src.rows, 224, 224);
 
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in.substract_mean_normalize(0, norm_vals);
 
-    auto start = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "cnnNet resize time: " << duration.count() << "s\n";
+
+    start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = cnnNet.create_extractor();
 
     ex.input("input.1", in);
@@ -335,9 +334,9 @@ std::vector<float> ncnn_ai::cnn(const cv::Mat &src)
     ncnn::Mat out;
     ex.extract("191", out);
 
-    auto end = std::chrono::steady_clock::now();
+    end = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> duration = end - start;
+    duration = end - start;
     std::cout << "cnnNet extract time: " << duration.count() << "s\n";
 
     {

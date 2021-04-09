@@ -39,6 +39,12 @@
 #include "benchmark.h"
 #endif
 
+#define SPPE_PARAM "pose_models/alphapose.param"
+#define SPPE_MODEL "pose_models/alphapose.bin"
+
+#define CNN_PARAM "CNN_models/resnet18.param"
+#define CNN_MODEL "CNN_models/resnet18.bin"
+
 using namespace ncnn_ai;
 
 int sz_boxes = 10;
@@ -123,6 +129,31 @@ int main(int argc, char** argv)
     double h_num = 10;
     bool write = false;
 
+    // init cnnNet
+    static ncnn::Net cnnNet;
+    static bool is_loaded_cnn = false;
+    if(!is_loaded_cnn)
+    {
+        cnnNet.opt.use_vulkan_compute = true;
+
+        cnnNet.load_param(CNN_PARAM);
+        cnnNet.load_model(CNN_MODEL);
+        is_loaded_cnn = true;
+    }
+
+    // init sppe
+    static ncnn::Net sppeNet;
+    static bool is_loaded_sppe = false;
+
+    if(!is_loaded_sppe)
+    {
+        sppeNet.opt.use_vulkan_compute = true;
+
+        sppeNet.load_param(SPPE_PARAM);
+        sppeNet.load_model(SPPE_MODEL);
+        is_loaded_sppe = true;
+    }
+
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, write};
     DrownAnalysis analysis = DrownAnalysis{};
@@ -198,7 +229,7 @@ int main(int argc, char** argv)
         std::vector<int> alarm_idx = RP.get_alarming_id(frameTrackingResult);
 
         analysis.update(frameTrackingResult, drown_frame.rows);
-        analysis.print();
+        // analysis.print();
         drown_frame = analysis.visualize(drown_frame);
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
 
@@ -229,10 +260,10 @@ int main(int argc, char** argv)
         cropImageFrom(imgs, frame, objects);
         for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
         {
-            skeletons.push_back(sppeOne(*itr));
-            predictions.push_back(cnn(*itr));
+            skeletons.push_back(sppeOne(*itr, sppeNet));
+            predictions.push_back(cnn(*itr, cnnNet));
             draw_pose(*itr, skeletons[itr-imgs.begin()], is_streaming);
-            print_topk(predictions[itr-imgs.begin()], 2);
+            // print_topk(predictions[itr-imgs.begin()], 2);
         }
         cv::imshow("img_cnt", im_cnt);
         cv::imshow("drown_frame", drown_frame);
