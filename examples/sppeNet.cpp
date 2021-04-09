@@ -17,7 +17,7 @@
 void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
 {
     target.clear();
-    printf("Crop Image...\n");
+//    printf("Crop Image...\n");
 
     //...
     for(auto itr = obj.begin(); itr != obj.end(); itr++)
@@ -45,7 +45,7 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
     auto end = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> duration = end - start;
-    std::cout << "sppeNet resize time: " << duration.count() << "s\n";
+    std::cout << "[SPPE] sppeNet resize time: " << duration.count() << "s\n";
 
     start = std::chrono::steady_clock::now();
 
@@ -59,7 +59,7 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
     end = std::chrono::steady_clock::now();
 
     duration = end - start;
-    std::cout << "sppeNet extract time: " << duration.count() << "s\n";
+    std::cout << "[SPPE] sppeNet inference time: " << duration.count() << "s\n";
 
 
     for (int p = 0; p < out.c; p++)

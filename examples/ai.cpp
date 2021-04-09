@@ -77,7 +77,7 @@ int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int
     auto end = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> duration = end - start;
-    std::cout << "yolo resize time: " << duration.count() << "s\n";
+    std::cout << "[Detector] yolo resize time: " << duration.count() << "s\n";
 
     start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = yolov4->create_extractor();
@@ -90,7 +90,7 @@ int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int
     end = std::chrono::steady_clock::now();
 
     duration = end - start;
-    std::cout << "yolo extract time: " << duration.count() << "s\n";
+    std::cout << "[Detector] yolo inference time: " << duration.count() << "s\n";
 
     objects.clear();
     for (int i = 0; i < out.h; i++)

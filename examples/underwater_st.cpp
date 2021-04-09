@@ -177,7 +177,6 @@ int main(int argc, char** argv)
 #endif
 
             cap >> frame;
-
             s_frame = frame.clone();
             drown_frame = frame.clone();
             im_cnt = im_raw.clone();
@@ -215,23 +214,29 @@ int main(int argc, char** argv)
             b_boxes.push_back(object.rect);
         }
 
+        auto start_rp = std::chrono::steady_clock::now();
         std::vector<std::vector<std::pair<double, double>>> RP_res = RP.get_condition(b_boxes);
         RP.update_region(RP_res);
         cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
+        std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
+        std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
 
-        auto SORT_start = std::chrono::high_resolution_clock::now();
+        auto start_sort = std::chrono::steady_clock::now();
 //		std::vector<std::vector<float>> untracked_boxes = utils_main.Rect2vf(b_boxes);
         std::vector<TrackingBox> frameTrackingResult = SORT(b_boxes);
         vis_id(frameTrackingResult, s_frame);
-        auto SORT_end = std::chrono::high_resolution_clock::now();
-        auto SORT_duration = duration_cast<milliseconds>(SORT_end - SORT_start);
-        std::cout << "Time taken for SORT " << SORT_duration.count() << " ms" << std::endl;
+        auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
+        std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
         std::vector<int> alarm_idx = RP.get_alarming_id(frameTrackingResult);
 
+        auto drown_start =  std::chrono::steady_clock::now();
         analysis.update(frameTrackingResult, drown_frame.rows);
         // analysis.print();
         drown_frame = analysis.visualize(drown_frame);
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
+        auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
+        std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
+
 
 
 //            std::cout << "x: " << object.rect.x << " y: " << object.rect.y << " width: " << object.rect.width << " height: " << object.rect.width << std::endl;
@@ -257,7 +262,11 @@ int main(int argc, char** argv)
         skeletons.clear();
         predictions.clear();
 
+        auto crop_start = std::chrono::steady_clock::now();
         cropImageFrom(imgs, frame, objects);
+        auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
+        std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
+
         for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
         {
             skeletons.push_back(sppeOne(*itr, sppeNet));
@@ -265,6 +274,7 @@ int main(int argc, char** argv)
             draw_pose(*itr, skeletons[itr-imgs.begin()], is_streaming);
             // print_topk(predictions[itr-imgs.begin()], 2);
         }
+
         cv::imshow("img_cnt", im_cnt);
         cv::imshow("drown_frame", drown_frame);
         cv::waitKey(1);

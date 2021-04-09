@@ -28,7 +28,7 @@ std::vector<float> ncnn_ai::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
     auto end = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> duration = end - start;
-    std::cout << "cnnNet resize time: " << duration.count() << "s\n";
+    std::cout << "[CNN] cnnNet resize time: " << duration.count() << "s\n";
 
     start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = cnnNet.create_extractor();
@@ -41,7 +41,7 @@ std::vector<float> ncnn_ai::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
     end = std::chrono::steady_clock::now();
 
     duration = end - start;
-    std::cout << "cnnNet extract time: " << duration.count() << "s\n";
+    std::cout << "[CNN] cnnNet inference time: " << duration.count() << "s\n";
 
     {
         ncnn::Layer* softmax = ncnn::create_layer("Softmax");
