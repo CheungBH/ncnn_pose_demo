@@ -23,6 +23,7 @@
 
 #include <chrono>
 
+
 #if CV_MAJOR_VERSION >= 33
 #include <opencv2/videoio/videoio.hpp>
 #endif
@@ -30,6 +31,8 @@
 #include <vector>
 //#include "RegionProcessor.h"
 #include "DrownAnalysis.h"
+#include "Img_tns.h"
+
 #include <stdio.h>
 
 #define NCNN_PROFILING
@@ -44,6 +47,14 @@
 
 #define CNN_PARAM "CNN_models/resnet18.param"
 #define CNN_MODEL "CNN_models/resnet18.bin"
+
+//#define YOLO_TENSOR_W 416
+//#define YOLO_TENSOR_H 416
+//#define YOLO_TENSOR_C 3
+//#define YOLO_TENSOR_N 1
+
+extern int YOLO_TENSOR_W , YOLO_TENSOR_H, YOLO_TENSOR_C, YOLO_TENSOR_N;
+extern int SPPE_TENSOR_W , SPPE_TENSOR_H, SPPE_TENSOR_C, SPPE_TENSOR_N;
 
 using namespace ncnn_ai;
 
@@ -195,7 +206,21 @@ int main(int argc, char** argv)
 // #ifdef NCNN_PROFILING
 //         double t_detect_start = ncnn::get_current_time();
 // #endif
-        detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
+
+        int greyscale = false;
+        cv::Scalar grey_value(128 , 128, 128);
+        cv::Mat temp = frame.clone();
+        cv::Mat resized_img;
+        cv::Mat yolo_padded_img(YOLO_TENSOR_H, YOLO_TENSOR_W, CV_8UC3, grey_value);
+        double resize_ratio = 1;
+
+        if(frame.cols > frame.rows){resize_ratio = (double)YOLO_TENSOR_W/(double)frame.cols ;}
+        else{resize_ratio = (double)YOLO_TENSOR_H/(double)frame.rows ;}
+        cv::Mat padded_frame = yolo_img(temp, yolo_padded_img, resize_ratio, greyscale);
+        cv::imshow("padded_frame", padded_frame);
+        detect_padded_yolov4(padded_frame, objects, target_size, resize_ratio, frame.cols, frame.rows, &yolov4);
+
+//        detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
 
 // #ifdef NCNN_PROFILING
 //         double t_detect_end = ncnn::get_current_time();
@@ -267,12 +292,22 @@ int main(int argc, char** argv)
         auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
         std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
 
+
+//        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+//        cv::Mat padded_temp = sppe_padded_img.clone();
+//        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
+
         for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
         {
-            skeletons.push_back(sppeOne(*itr, sppeNet));
-            predictions.push_back(cnn(*itr, cnnNet));
-            draw_pose(*itr, skeletons[itr-imgs.begin()], is_streaming);
-            // print_topk(predictions[itr-imgs.begin()], 2);
+            double area = itr->size[0]*itr->size[1];
+            if(area > 10)
+            {
+
+                skeletons.push_back(sppeOne(*itr, sppeNet));
+                predictions.push_back(cnn(*itr, cnnNet));
+                draw_pose(*itr, skeletons[itr-imgs.begin()], is_streaming);
+                // print_topk(predictions[itr-imgs.begin()], 2);
+            }
         }
 
         cv::imshow("img_cnt", im_cnt);

@@ -9,17 +9,24 @@
 #include <algorithm>
 #include <chrono>
 #include <opencv2/core/core.hpp>
+#include <Img_tns.h>
+extern int SPPE_TENSOR_H, SPPE_TENSOR_W;
 
 //sPPE begin
-void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
+void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const std::vector<Object> &obj)
 {
     target.clear();
 //    printf("Crop Image...\n");
 
     //...
+    cv::Scalar grey_value(128, 128, 128);
+    cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+    cv::Mat padded_temp = sppe_padded_img.clone();
+
     for(auto itr = obj.begin(); itr != obj.end(); itr++)
     {
-        target.push_back(src(itr->rect).clone());
+        cv::Mat padded = padded_sppe_img(src, padded_temp, itr->rect, itr->rect.width, itr->rect.height);
+        target.push_back(padded.clone());
     }
 
     return;
@@ -127,7 +134,7 @@ void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
     cv::imshow("pose", image);
     if(is_streaming)
     {
-        cv::waitKey(1);
+        cv::waitKey(10);
     }
     else
     {
