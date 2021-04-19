@@ -100,7 +100,7 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
     return target;
 }
 
-void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming)
+void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
 {
     cv::Mat image = bgr.clone();
 
@@ -111,19 +111,33 @@ void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
 
     for (int i = 0; i < 16; i++)
     {
-        const KP& p1 = keypoints[joint_pairs[i][0]];
-        const KP& p2 = keypoints[joint_pairs[i][1]];
+        KP p1 = keypoints[joint_pairs[i][0]];
+        KP p2 = keypoints[joint_pairs[i][1]];
+
+        p1.p.x *= obj.rect.width / SPPE_TENSOR_W;
+        p1.p.x += obj.rect.x;
+        p1.p.y *= obj.rect.height / SPPE_TENSOR_H;
+        p1.p.y += obj.rect.y;
+
+        p2.p.x *= obj.rect.width / SPPE_TENSOR_W;
+        p2.p.x += obj.rect.x;
+        p2.p.y *= obj.rect.height / SPPE_TENSOR_H;
+        p2.p.y += obj.rect.y;
 
         if (p1.prob < 0.04f || p2.prob < 0.04f)
             continue;
-
         cv::line(image, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
     }
 
     // draw joint
     for (size_t i = 0; i < keypoints.size(); i++)
     {
-        const KP& keypoint = keypoints[i];
+        KP keypoint = keypoints[i];
+
+        keypoint.p.x *= obj.rect.width / SPPE_TENSOR_W;
+        keypoint.p.x += obj.rect.x;
+        keypoint.p.y *= obj.rect.height / SPPE_TENSOR_H;
+        keypoint.p.y += obj.rect.y;
 
         // fprintf(stderr, "%.2f %.2f = %.5f\n", keypoint.p.x, keypoint.p.y, keypoint.prob);
 

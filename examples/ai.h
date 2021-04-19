@@ -32,7 +32,7 @@ namespace ncnn_ai {
 
     std::vector <KP> sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet);
 
-    void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints, int is_streaming);
+    void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints, int is_streaming, const Object& obj);
 
     std::vector<float> cnn(const cv::Mat &src, const ncnn::Net& cnnNet);
 

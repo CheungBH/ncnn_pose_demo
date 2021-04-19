@@ -298,6 +298,8 @@ int main(int argc, char** argv)
 //        cv::Mat padded_temp = sppe_padded_img.clone();
 //        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
 
+        int i = 0;
+
         for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
         {
             double area = itr->size[0]*itr->size[1];
@@ -306,13 +308,14 @@ int main(int argc, char** argv)
 
                 skeletons.push_back(sppeOne(*itr, sppeNet));
                 predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(*itr, skeletons[itr-imgs.begin()], is_streaming);
+                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming, objects[i]);
                 // print_topk(predictions[itr-imgs.begin()], 2);
+                i++;
             }
         }
 
         cv::imshow("img_cnt", im_cnt);
-        cv::imshow("drown_frame", drown_frame);
+        // cv::imshow("drown_frame", drown_frame);
         cv::waitKey(1);
 
 
