@@ -145,7 +145,7 @@ int main(int argc, char** argv)
     static bool is_loaded_cnn = false;
     if(!is_loaded_cnn)
     {
-        cnnNet.opt.use_vulkan_compute = true;
+        cnnNet.opt.use_vulkan_compute = 1;
 
         cnnNet.load_param(CNN_PARAM);
         cnnNet.load_model(CNN_MODEL);
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 
     if(!is_loaded_sppe)
     {
-        sppeNet.opt.use_vulkan_compute = true;
+        sppeNet.opt.use_vulkan_compute = 1;
 
         sppeNet.load_param(SPPE_PARAM);
         sppeNet.load_model(SPPE_MODEL);
@@ -288,6 +288,7 @@ int main(int argc, char** argv)
         predictions.clear();
 
         auto crop_start = std::chrono::steady_clock::now();
+        std::cout << frame.size << std::endl;
         cropImageFrom(imgs, frame, objects);
         auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
         std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;

@@ -87,9 +87,11 @@ cv::Mat& padded_sppe_img(cv::Mat& img, cv::Mat& padded_img, const cv::Rect& rect
 //    Timer timer;
     int w ;
     int h ;
-    w = sppe_boundary(rect.x+rect.width, 0, img_width) - rect.x;
-    h = sppe_boundary(rect.y+rect.height, 0, img_height) - rect.y;
+    w = sppe_boundary(rect.x+rect.width, 0, img.cols) - rect.x;
+    h = sppe_boundary(rect.y+rect.height, 0, img.rows) - rect.y;
     cv::Rect new_rect(rect.x, rect.y, w, h);
+    std::cout << "rect x: " << rect.x << " rect y: " << rect.y << " w: " << w << " h: " << h << std::endl;
+    std::cout << "img: " << img.size << std::endl;
     cv::Mat croppedimg = img(new_rect);
 
     double resize_ratio = 1;

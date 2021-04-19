@@ -187,8 +187,10 @@ int ncnn_ai::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objec
         object.rect.y = temp[1];
         object.rect.width = temp[2]-temp[0];
         object.rect.height = temp[3]-temp[1];
-
-        objects.push_back(object);
+        if(object.rect.width != 0 && object.rect.height !=0)
+        {
+            objects.push_back(object);
+        }
     }
 
     return 0;
