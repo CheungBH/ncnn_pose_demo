@@ -315,7 +315,7 @@ int main(int argc, char** argv)
         }
 
         cv::imshow("img_cnt", im_cnt);
-        // cv::imshow("drown_frame", drown_frame);
+        cv::imshow("pose", drown_frame);
         cv::waitKey(1);
 
 

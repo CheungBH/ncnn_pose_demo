@@ -53,8 +53,10 @@ int ncnn_ai::init_yolov4(ncnn::Net* yolov4, int* target_size)
     // the ncnn model https://drive.google.com/drive/folders/1YzILvh0SKQPS_lrb33dmGNq7aVTKPWS0?usp=sharing
     // the ncnn model https://github.com/nihui/ncnn-assets/tree/master/models
 #ifndef YOLOV4_TINY
-    const char* yolov4_param = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.param";
-    const char* yolov4_model = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.bin";
+//    const char* yolov4_param = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.param";
+//    const char* yolov4_model = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.bin";
+    const char* yolov4_param = "/home/sean/Documents/ncnn_pose_demo/build/examples/ncnn.param";
+    const char* yolov4_model = "/home/sean/Documents/ncnn_pose_demo/build/examples/ncnn.bin";
     *target_size = 416;
 #else
     const char* yolov4_param = "yolov4-opt.param";
@@ -177,7 +179,7 @@ int ncnn_ai::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objec
         double temp[4] = {xmin, ymin, xmax, ymax};
         for (int j = 0; j < 4; j++)
         {
-            temp[j] = boundary(temp[j], 0, (j % 2 == 1 ? orig_w - 1 : orig_h - 1));
+            temp[j] = boundary(temp[j], 0, (j % 2 != 1 ? orig_w - 1 : orig_h - 1));
         }
 
         Object object;

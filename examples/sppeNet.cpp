@@ -102,8 +102,6 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
 
 void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
 {
-    cv::Mat image = bgr.clone();
-
     // draw bone
     static const int joint_pairs[16][2] = {
             {0, 1}, {1, 3}, {0, 2}, {2, 4}, {5, 6}, {5, 7}, {7, 9}, {6, 8}, {8, 10}, {5, 11}, {6, 12}, {11, 12}, {11, 13}, {12, 14}, {13, 15}, {14, 16}
@@ -126,7 +124,7 @@ void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
 
         if (p1.prob < 0.04f || p2.prob < 0.04f)
             continue;
-        cv::line(image, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
+        cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
     }
 
     // draw joint
@@ -144,10 +142,9 @@ void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
         if (keypoint.prob < 0.2f)
             continue;
 
-        cv::circle(image, keypoint.p, 3, cv::Scalar(0, 255, 0), -1);
+        cv::circle(bgr, keypoint.p, 3, cv::Scalar(0, 255, 0), -1);
     }
 
-    cv::imshow("pose", image);
     if(is_streaming)
     {
         cv::waitKey(10);
