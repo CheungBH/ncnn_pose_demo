@@ -12,7 +12,9 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-#include "ai.h"
+#include "yolov.h"
+#include "sppeNet.h"
+#include "cnnNet.h"
 #include "Tracker.h"
 #include "RegionProcessor.h"
 #include "Hungarian.h"
@@ -56,7 +58,9 @@
 extern int YOLO_TENSOR_W , YOLO_TENSOR_H, YOLO_TENSOR_C, YOLO_TENSOR_N;
 extern int SPPE_TENSOR_W , SPPE_TENSOR_H, SPPE_TENSOR_C, SPPE_TENSOR_N;
 
-using namespace ncnn_ai;
+using namespace yolov;
+using namespace sppeNet;
+using namespace cnnNet;
 
 int sz_boxes = 10;
 int sz_skeletons = 30;

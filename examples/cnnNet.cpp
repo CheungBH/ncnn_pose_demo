@@ -2,15 +2,14 @@
 // Created by sean on 2021/4/9.
 //
 
-#include "ai.h"
-#include "net.h"
+#include "cnnNet.h"
 
+#include <iostream>
 #include <algorithm>
 #include <chrono>
-#include <opencv2/core/core.hpp>
 
 //CNN begin
-std::vector<float> ncnn_ai::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
+std::vector<float> cnnNet::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
 {
     std::vector<float> target;
 
@@ -60,7 +59,7 @@ std::vector<float> ncnn_ai::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
     return target;
 }
 
-int ncnn_ai::print_topk(const std::vector<float>& cls_scores, int topk)
+int cnnNet::print_topk(const std::vector<float>& cls_scores, int topk)
 {
     // partial sort topk with index
     int size = cls_scores.size();

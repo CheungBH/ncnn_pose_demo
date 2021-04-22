@@ -1,16 +1,12 @@
 //
 // Created by sean on 2021/4/8.
 //
-#include "ai.h"
-
-#include "net.h"
-#include "RegionProcessor.h"
+#include "yolov.h"
 #include "Hungarian.h"
 #include "utils.h"
 
 #include <algorithm>
 #include <chrono>
-#include <opencv2/core/core.hpp>
 
 int YOLO_TENSOR_W = 416;
 int YOLO_TENSOR_H = 416;
@@ -29,7 +25,7 @@ int boundary(int n, int lower, int upper)
     return (n > upper ? upper : (n < lower ? lower : n));
 }
 
-int ncnn_ai::init_yolov4(ncnn::Net* yolov4, int* target_size)
+int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
 {
     /* --> Set the params you need for the ncnn inference <-- */
 
@@ -79,7 +75,7 @@ int ncnn_ai::init_yolov4(ncnn::Net* yolov4, int* target_size)
     return 0;
 }
 
-int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, ncnn::Net* yolov4)
+int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, ncnn::Net* yolov4)
 {
 
     auto start = std::chrono::steady_clock::now();
@@ -178,7 +174,7 @@ int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int
     return 0;
 }
 
-int ncnn_ai::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, double resize_ratio, double orig_w, double orig_h, ncnn::Net* yolov4)
+int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, double resize_ratio, double orig_w, double orig_h, ncnn::Net* yolov4)
 {
     int img_w = bgr.cols;
     int img_h = bgr.rows;
@@ -247,7 +243,7 @@ int ncnn_ai::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objec
     return 0;
 }
 
-cv::Mat ncnn_ai::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
+cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
 {
     static const char* class_names[] = {"background", "person", "bicycle",
                                         "car", "motorbike", "aeroplane", "bus", "train", "truck",

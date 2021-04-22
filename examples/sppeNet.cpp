@@ -1,19 +1,15 @@
 //
 // Created by sean on 2021/4/9.
 //
-
-#include "ai.h"
-
-#include "net.h"
+#include "sppeNet.h"
+#include "Img_tns.h"
 
 #include <algorithm>
 #include <chrono>
-#include <opencv2/core/core.hpp>
-#include <Img_tns.h>
+
 extern int SPPE_TENSOR_H, SPPE_TENSOR_W;
 
-
-void ncnn_ai::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
+void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
 {
     target.clear();
 
@@ -26,7 +22,7 @@ void ncnn_ai::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src
     return;
 }
 
-std::vector<KP> ncnn_ai::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet) {
+std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet) {
 
     std::vector<KP> target;
     cv::Mat img_tmp = src.clone();
@@ -120,7 +116,7 @@ std::vector<KP> ncnn_ai::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
 }
 
 //sPPE begin
-void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const std::vector<Object> &obj)
+void sppeNet::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const std::vector<Object> &obj)
 {
     target.clear();
 //    printf("Crop Image...\n");
@@ -142,7 +138,7 @@ void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const st
     return;
 }
 
-std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
+std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
 {
     std::vector<KP> target;
 
@@ -208,7 +204,7 @@ std::vector<KP> ncnn_ai::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
     return target;
 }
 
-void ncnn_ai::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
+void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
 {
     // draw bone
     static const int joint_pairs[16][2] = {
