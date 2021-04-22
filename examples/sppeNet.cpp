@@ -12,6 +12,113 @@
 #include <Img_tns.h>
 extern int SPPE_TENSOR_H, SPPE_TENSOR_W;
 
+
+void ncnn_ai::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
+{
+    target.clear();
+
+    //...
+    for(auto itr = obj.begin(); itr != obj.end(); itr++)
+    {
+        target.push_back(src(itr->rect).clone());
+    }
+
+    return;
+}
+
+std::vector<KP> ncnn_ai::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet) {
+
+    std::vector<KP> target;
+    cv::Mat img_tmp = src.clone();
+    cv::Scalar grey_value(128, 128, 128);
+    cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+
+    int original_w = src.cols, original_h = src.rows;
+    double resize_ratio = 1;
+    double resize_ratio_1 = (double)SPPE_TENSOR_W/original_w;
+    double resize_ratio_2 = (double)SPPE_TENSOR_H/original_h;
+
+    double resize_ratio_final = resize_ratio_1 < resize_ratio_2 ? resize_ratio_1 : resize_ratio_2;
+    resize_ratio = resize_ratio_final;
+
+    double new_w = (double)original_w * resize_ratio;
+    double new_h = (double)original_h * resize_ratio;
+    double padded_x ;
+    double padded_y ;
+    if(original_w > original_h)
+    {
+        padded_x = 0;
+        padded_y = (0.5)*((double)320.0 - new_h);
+        //std::cout << "w: " << img.cols << " h: " << img.rows << " resize_ratio: " << resize_ratio <<std::endl;
+    }
+    else
+    {
+        padded_x = (0.5)*((double)256.0 - new_w);
+        padded_y = 0;
+        //std::cout << "w: " << img.cols << " h: " << img.rows << " resize_ratio: " << resize_ratio <<std::endl;
+    }
+    cv::Size new_sz(new_w,new_h);
+    cv::resize(img_tmp, img_tmp, new_sz);
+    img_tmp.copyTo(sppe_padded_img(cv::Rect(padded_x, padded_y, original_w, original_h)));
+
+
+    auto start = std::chrono::steady_clock::now();
+
+    ncnn::Mat in = ncnn::Mat::from_pixels_resize(sppe_padded_img.data, ncnn::Mat::PIXEL_BGR2RGB, SPPE_TENSOR_W,
+                                                 SPPE_TENSOR_H, 256, 320);
+
+    const float mean_vals[3] = {0.485f * 255.f, 0.456f * 255.f, 0.406f * 255.f};
+    const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
+    in.substract_mean_normalize(mean_vals, norm_vals);
+
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "[SPPE] sppeNet resize time: " << duration.count() << "s\n";
+
+    start = std::chrono::steady_clock::now();
+
+    ncnn::Extractor ex = sppeNet.create_extractor();
+
+    ex.input("input.1", in);
+
+    ncnn::Mat out;
+    ex.extract("1123", out);
+
+    end = std::chrono::steady_clock::now();
+
+    duration = end - start;
+    std::cout << "[SPPE] sppeNet inference time: " << duration.count() << "s\n";
+
+
+    for (int p = 0; p < out.c; p++) {
+        const ncnn::Mat m = out.channel(p);
+
+        float max_prob = 0.f;
+        int max_x = 0;
+        int max_y = 0;
+        for (int y = 0; y < out.h; y++) {
+            const float *ptr = m.row(y);
+            for (int x = 0; x < out.w; x++) {
+                float prob = ptr[x];
+                if (prob > max_prob) {
+                    max_prob = prob;
+                    max_x = x;
+                    max_y = y;
+                }
+            }
+        }
+
+        KP keypoint;
+        keypoint.p = cv::Point2f(max_x * original_w / (float) out.w, max_y * original_h / (float) out.h);
+        keypoint.prob = max_prob;
+
+        target.push_back(keypoint);
+    }
+
+    return target;
+}
+
 //sPPE begin
 void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const std::vector<Object> &obj)
 {

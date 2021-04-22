@@ -259,6 +259,7 @@ int main(int argc, char** argv)
         auto crop_start = std::chrono::steady_clock::now();
         std::cout << frame.size << std::endl;
         cropImageFrom(imgs, frame, objects);
+//        cropImageOriginal(imgs, frame, objects);
         auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
         std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
 

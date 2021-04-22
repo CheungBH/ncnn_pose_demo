@@ -31,12 +31,16 @@ namespace ncnn_ai {
     void cropImageFrom(std::vector <cv::Mat> &target, cv::Mat &src, const std::vector <Object> &obj);
 
     std::vector <KP> sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet);
+    std::vector<KP> sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet);
 
-    void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints, int is_streaming, const Object& obj);
+
+        void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints, int is_streaming, const Object& obj);
 
     std::vector<float> cnn(const cv::Mat &src, const ncnn::Net& cnnNet);
 
     int print_topk(const std::vector<float> &cls_scores, int topk);
 
     int detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, double resize_ratio, double orig_w, double orig_h, ncnn::Net* yolov4);
+
+    void cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj);
 }
