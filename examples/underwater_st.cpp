@@ -207,29 +207,20 @@ int main(int argc, char** argv)
 //         double t_detect_start = ncnn::get_current_time();
 // #endif
 
-        int greyscale = false;
-        cv::Scalar grey_value(128 , 128, 128);
-        cv::Mat temp = frame.clone();
-        cv::Mat resized_img;
-        cv::Mat yolo_padded_img(YOLO_TENSOR_H, YOLO_TENSOR_W, CV_8UC3, grey_value);
-        double resize_ratio = 1;
+//        int greyscale = false;
+//        cv::Scalar grey_value(128 , 128, 128);
+//        cv::Mat temp = frame.clone();
+//        cv::Mat resized_img;
+//        cv::Mat yolo_padded_img(YOLO_TENSOR_H, YOLO_TENSOR_W, CV_8UC3, grey_value);
+//        double resize_ratio = 1;
+//
+//        if(frame.cols > frame.rows){resize_ratio = (double)YOLO_TENSOR_W/(double)frame.cols ;}
+//        else{resize_ratio = (double)YOLO_TENSOR_H/(double)frame.rows ;}
+//        cv::Mat padded_frame = yolo_img(temp, yolo_padded_img, resize_ratio, greyscale);
+//        cv::imshow("padded_frame", padded_frame);
+//        detect_padded_yolov4(padded_frame, objects, target_size, resize_ratio, frame.cols, frame.rows, &yolov4);
 
-        if(frame.cols > frame.rows){resize_ratio = (double)YOLO_TENSOR_W/(double)frame.cols ;}
-        else{resize_ratio = (double)YOLO_TENSOR_H/(double)frame.rows ;}
-        cv::Mat padded_frame = yolo_img(temp, yolo_padded_img, resize_ratio, greyscale);
-        cv::imshow("padded_frame", padded_frame);
-        detect_padded_yolov4(padded_frame, objects, target_size, resize_ratio, frame.cols, frame.rows, &yolov4);
-
-//        detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
-
-// #ifdef NCNN_PROFILING
-//         double t_detect_end = ncnn::get_current_time();
-//         fprintf(stdout, "NCNN detection time %.02lfms\n", t_detect_end - t_detect_start);
-// #endif
-
-// #ifdef NCNN_PROFILING
-//         double t_draw_start = ncnn::get_current_time();
-// #endif
+        detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
 
         std::vector<cv::Rect> b_boxes;
 
@@ -262,28 +253,6 @@ int main(int argc, char** argv)
         auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
         std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
 
-
-
-//            std::cout << "x: " << object.rect.x << " y: " << object.rect.y << " width: " << object.rect.width << " height: " << object.rect.width << std::endl;
-//        }
-// #ifdef NCNN_PROFILING
-//         double t_draw_end = ncnn::get_current_time();
-//         fprintf(stdout, "NCNN OpenCV draw result time %.02lfms\n", t_draw_end - t_draw_start);
-// #endif
-        //kalman filter...
-
-        //update list...
-        //ls.update(/*Result from kalman tracker*/tb_list);
-
-        //do sppe if needed...
-
-        //update sppe result...
-        //convert std::vector<KP(KeyPoint)> to std::vector<skeleton> first
-        //ls.updateAllSkeletons(/*sppe result*/kpts);
-        //do cnn if needed...
-
-        //update cnn result...
-        //ls.updateAllPredictions(/*cnn result*/preds);
         skeletons.clear();
         predictions.clear();
 

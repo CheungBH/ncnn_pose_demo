@@ -29,6 +29,10 @@ cv::Mat& yolo_img(cv::Mat& img, cv::Mat& padded_img, double resize_ratio, bool g
         //Letter box
         cv::resize(img, img, new_sz);
         //Put the resized image inside the grey image
+        cv::imshow("Img", img);
+        cv::imshow("padded_img", padded_img);
+        cv::imshow("Region of Interest", padded_img(cv::Rect(padded_x, padded_y, img.cols, img.rows)));
+//        cv::waitKey(0);
         img.copyTo(padded_img(cv::Rect(padded_x, padded_y, img.cols, img.rows)));
 
         if (greyScale){

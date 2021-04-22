@@ -28,6 +28,7 @@ void ncnn_ai::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const st
         double area = itr->rect.width*itr->rect.height;
 
         cv::Mat padded = padded_sppe_img(src, padded_temp, itr->rect, itr->rect.width, itr->rect.height);
+        cv::imshow("padded_sppe", padded);
         target.push_back(padded.clone());
     }
 

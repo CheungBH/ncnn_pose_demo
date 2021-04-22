@@ -81,12 +81,46 @@ int ncnn_ai::init_yolov4(ncnn::Net* yolov4, int* target_size)
 
 int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, ncnn::Net* yolov4)
 {
-    int img_w = bgr.cols;
-    int img_h = bgr.rows;
 
     auto start = std::chrono::steady_clock::now();
 
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, bgr.cols, bgr.rows, target_size, target_size);
+    int img_w = bgr.cols;
+    int img_h = bgr.rows;
+
+    cv::Mat tmp = bgr.clone();
+    double resize_ratio;
+    cv::Scalar grey_value(128 , 128, 128);
+    cv::Mat gray_img(target_size, target_size, CV_8UC3, grey_value);
+
+    if(img_w > img_h)
+    {
+        resize_ratio = (double)target_size/(double)img_w ;
+    }
+    else
+    {
+        resize_ratio = (double)target_size/(double)img_h ;
+    }
+    double padded_x, padded_y;
+    double new_w  = img_w * resize_ratio;
+    double new_h = img_h * resize_ratio;
+    cv::Size new_sz(new_w,new_h);
+
+    if(img_w > img_h)
+    {
+        padded_x = 0;
+        padded_y = (0.5)*((double)416 - new_h);
+    }
+    else
+    {
+        padded_x = (0.5)*((double)416 - new_w);
+        padded_y = 0;
+    }
+    cv::resize(tmp, tmp, new_sz);
+
+    tmp.copyTo(gray_img(cv::Rect(padded_x, padded_y, new_w, new_h)));
+    cv::imshow("test", gray_img);
+
+    ncnn::Mat in = ncnn::Mat::from_pixels_resize(gray_img.data, ncnn::Mat::PIXEL_BGR2RGB, gray_img.cols, gray_img.rows, target_size, target_size);
 
     const float mean_vals[3] = {0, 0, 0};
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
@@ -115,15 +149,30 @@ int ncnn_ai::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int
     {
         const float* values = out.row(i);
 
+        double xmin = ( values[2]* target_size + (-(double)0.5*((double)target_size - (resize_ratio * img_w) )) ) * ((double)img_w / (double)new_w);
+        double ymin = ( values[3]* target_size + (-(double)0.5*((double)target_size - (resize_ratio * img_h) )) ) * ((double)img_h / (double)new_h);
+        double xmax = ( values[4]* target_size + (-(double)0.5*((double)target_size - (resize_ratio * img_w) )) ) * ((double)img_w / (double)new_w);
+        double ymax = ( values[5]* target_size + (-(double)0.5*((double)target_size - (resize_ratio * img_h) )) ) * ((double)img_h / (double)new_h);
+//        double width = xmax - xmin;
+//        double height = ymax - ymin;
+
+        double temp[4] = {xmin, ymin, xmax, ymax};
+        for (int j = 0; j < 4; j++)
+        {
+            temp[j] = boundary(temp[j], 0, (j % 2 != 1 ? img_w - 1 : img_h - 1));
+        }
+
         Object object;
         object.label = values[0];
         object.prob = values[1];
-        object.rect.x = values[2] * img_w;
-        object.rect.y = values[3] * img_h;
-        object.rect.width = values[4] * img_w - object.rect.x;
-        object.rect.height = values[5] * img_h - object.rect.y;
-
-        objects.push_back(object);
+        object.rect.x = temp[0];
+        object.rect.y = temp[1];
+        object.rect.width = temp[2]-temp[0];
+        object.rect.height = temp[3]-temp[1];
+        if(object.rect.width != 0 && object.rect.height !=0 && values[0] == 1)
+        {
+            objects.push_back(object);
+        }
     }
 
     return 0;
@@ -249,17 +298,5 @@ cv::Mat ncnn_ai::draw_objects(const cv::Mat& bgr, const std::vector<Object>& obj
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
     }
 
-//    cv::imshow("image", image);
-//
-//    if (is_streaming)
-//    {
-//        cv::waitKey(1);
-//    }
-//    else
-//    {
-//        cv::waitKey(0);
-//    }
-
     return image;
 }
-//yolo end
