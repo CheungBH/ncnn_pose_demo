@@ -24,7 +24,7 @@ namespace sppeNet {
 
     std::vector <KP> sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const Object &obj);
 
-    void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints, int is_streaming);
+    void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints);
 
     void cropImageFrom(std::vector <cv::Mat> &target, cv::Mat &src, const std::vector <Object> &obj);
 }

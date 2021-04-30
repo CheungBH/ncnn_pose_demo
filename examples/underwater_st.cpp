@@ -207,22 +207,6 @@ int main(int argc, char** argv)
             }
         }
 
-// #ifdef NCNN_PROFILING
-//         double t_detect_start = ncnn::get_current_time();
-// #endif
-
-//        int greyscale = false;
-//        cv::Scalar grey_value(128 , 128, 128);
-//        cv::Mat temp = frame.clone();
-//        cv::Mat resized_img;
-//        cv::Mat yolo_padded_img(YOLO_TENSOR_H, YOLO_TENSOR_W, CV_8UC3, grey_value);
-//        double resize_ratio = 1;
-//
-//        if(frame.cols > frame.rows){resize_ratio = (double)YOLO_TENSOR_W/(double)frame.cols ;}
-//        else{resize_ratio = (double)YOLO_TENSOR_H/(double)frame.rows ;}
-//        cv::Mat padded_frame = yolo_img(temp, yolo_padded_img, resize_ratio, greyscale);
-//        cv::imshow("padded_frame", padded_frame);
-//        detect_padded_yolov4(padded_frame, objects, target_size, resize_ratio, frame.cols, frame.rows, &yolov4);
 
         detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
 
@@ -282,7 +266,7 @@ int main(int argc, char** argv)
                 skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
 //                skeletons.push_back(sppeOne(*itr, sppeNet));
                 predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming);
+                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
                 // print_topk(predictions[itr-imgs.begin()], 2);
                 i++;
             }

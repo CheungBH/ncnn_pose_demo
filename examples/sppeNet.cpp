@@ -207,7 +207,7 @@ std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
     return target;
 }
 
-void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming)
+void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
 {
     // draw bone
     static const int joint_pairs[16][2] = {
@@ -219,19 +219,6 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
         KP p1 = keypoints[joint_pairs[i][0]];
         KP p2 = keypoints[joint_pairs[i][1]];
 
-//        p1.p.x *= obj.rect.width;
-//        p1.p.x += obj.rect.x;
-//        p1.p.y *= obj.rect.height;
-//        p1.p.y += obj.rect.y;
-//
-//        p2.p.x *= obj.rect.width;
-//        p2.p.x += obj.rect.x;
-//        p2.p.y *= obj.rect.height;
-//        p2.p.y += obj.rect.y;
-//        p1.p.x += obj.rect.x;
-//        p1.p.y += obj.rect.y;
-//        p2.p.x += obj.rect.x;
-//        p2.p.y += obj.rect.y;
 
         if (p1.prob < 0.04f || p2.prob < 0.04f)
             continue;
@@ -258,14 +245,6 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
         cv::circle(bgr, keypoint.p, 3, cv::Scalar(0, 255, 0), -1);
     }
 
-    if(is_streaming)
-    {
-        cv::waitKey(10);
-    }
-    else
-    {
-        cv::waitKey(0);
-    }
 }
 
 //void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
