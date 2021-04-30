@@ -279,10 +279,10 @@ int main(int argc, char** argv)
             double area = itr->size[0]*itr->size[1];
             if(area > 10)
             {
-                skeletons.push_back(sppeOneAll(*itr, sppeNet));
+                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
 //                skeletons.push_back(sppeOne(*itr, sppeNet));
                 predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming, objects[i]);
+                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming);
                 // print_topk(predictions[itr-imgs.begin()], 2);
                 i++;
             }

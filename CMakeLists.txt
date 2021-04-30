@@ -169,9 +169,9 @@ add_subdirectory(src)
 add_subdirectory(examples)
 
 # Copy resources
-FILE(COPY dev DESTINATION "${CMAKE_BINARY_DIR}/examples")
-FILE(COPY CNN_models DESTINATION "${CMAKE_BINARY_DIR}/examples")
-FILE(COPY pose_models DESTINATION "${CMAKE_BINARY_DIR}/examples")
-FILE(COPY yolov4-tiny-opt.param DESTINATION "${CMAKE_BINARY_DIR}/examples")
-FILE(COPY yolov4-tiny-opt.bin DESTINATION "${CMAKE_BINARY_DIR}/examples")
+#FILE(COPY dev DESTINATION "${CMAKE_BINARY_DIR}/examples")
+#FILE(COPY CNN_models DESTINATION "${CMAKE_BINARY_DIR}/examples")
+#FILE(COPY pose_models DESTINATION "${CMAKE_BINARY_DIR}/examples")
+#FILE(COPY yolov4-tiny-opt.param DESTINATION "${CMAKE_BINARY_DIR}/examples")
+#FILE(COPY yolov4-tiny-opt.bin DESTINATION "${CMAKE_BINARY_DIR}/examples")
 
