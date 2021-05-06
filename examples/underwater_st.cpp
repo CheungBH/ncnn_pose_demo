@@ -150,27 +150,27 @@ int main(int argc, char** argv)
     // init cnnNet
     static ncnn::Net cnnNet;
     static bool is_loaded_cnn = false;
-//    if(!is_loaded_cnn)
-//    {
-//        cnnNet.opt.use_vulkan_compute = 1;
-//
-//        cnnNet.load_param(CNN_PARAM);
-//        cnnNet.load_model(CNN_MODEL);
-//        is_loaded_cnn = true;
-//    }
+    if(!is_loaded_cnn)
+    {
+        cnnNet.opt.use_vulkan_compute = 1;
+
+        cnnNet.load_param(CNN_PARAM);
+        cnnNet.load_model(CNN_MODEL);
+        is_loaded_cnn = true;
+    }
 
     // init sppe
     static ncnn::Net sppeNet;
     static bool is_loaded_sppe = false;
 
-//    if(!is_loaded_sppe)
-//    {
-//        sppeNet.opt.use_vulkan_compute = 1;
-//
-//        sppeNet.load_param(SPPE_PARAM);
-//        sppeNet.load_model(SPPE_MODEL);
-//        is_loaded_sppe = true;
-//    }
+    if(!is_loaded_sppe)
+    {
+        sppeNet.opt.use_vulkan_compute = 1;
+
+        sppeNet.load_param(SPPE_PARAM);
+        sppeNet.load_model(SPPE_MODEL);
+        is_loaded_sppe = true;
+    }
 
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, write};
@@ -212,22 +212,6 @@ int main(int argc, char** argv)
             }
         }
 
-// #ifdef NCNN_PROFILING
-//         double t_detect_start = ncnn::get_current_time();
-// #endif
-
-//        int greyscale = false;
-//        cv::Scalar grey_value(128 , 128, 128);
-//        cv::Mat temp = frame.clone();
-//        cv::Mat resized_img;
-//        cv::Mat yolo_padded_img(YOLO_TENSOR_H, YOLO_TENSOR_W, CV_8UC3, grey_value);
-//        double resize_ratio = 1;
-//
-//        if(frame.cols > frame.rows){resize_ratio = (double)YOLO_TENSOR_W/(double)frame.cols ;}
-//        else{resize_ratio = (double)YOLO_TENSOR_H/(double)frame.rows ;}
-//        cv::Mat padded_frame = yolo_img(temp, yolo_padded_img, resize_ratio, greyscale);
-//        cv::imshow("padded_frame", padded_frame);
-//        detect_padded_yolov4(padded_frame, objects, target_size, resize_ratio, frame.cols, frame.rows, &yolov4);
 
         detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
 
@@ -277,23 +261,24 @@ int main(int argc, char** argv)
 //        cv::Mat padded_temp = sppe_padded_img.clone();
 //        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
 
-//        int i = 0;
-//
-//        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
-//        {
-//            double area = itr->size[0]*itr->size[1];
-//            if(area > 10)
-//            {
-//                skeletons.push_back(sppeOneAll(*itr, sppeNet));
-////                skeletons.push_back(sppeOne(*itr, sppeNet));
-//                predictions.push_back(cnn(*itr, cnnNet));
-//                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming, objects[i]);
-//                // print_topk(predictions[itr-imgs.begin()], 2);
-//                i++;
-//            }
-//        }
 
-//        cv::imshow("img_cnt", im_cnt);
+        int i = 0;
+
+        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
+        {
+            double area = itr->size[0]*itr->size[1];
+            if(area > 10)
+            {
+                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
+//                skeletons.push_back(sppeOne(*itr, sppeNet));
+                predictions.push_back(cnn(*itr, cnnNet));
+                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
+                // print_topk(predictions[itr-imgs.begin()], 2);
+                i++;
+            }
+        }
+
+        cv::imshow("img_cnt", im_cnt);
         cv::imshow("pose", drown_frame);
         cv::waitKey(1);
 

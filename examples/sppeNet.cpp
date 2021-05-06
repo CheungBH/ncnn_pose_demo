@@ -22,7 +22,7 @@ void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src
     return;
 }
 
-std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet) {
+std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const Object& obj) {
 
     std::vector<KP> target;
     cv::Mat img_tmp = src.clone();
@@ -106,8 +106,8 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
         }
 
         KP keypoint;
-        float coord_x = (float) ((float) max_x / (float) out_w * (float) SPPE_TENSOR_W - (float )padded_x) / (float) resize_ratio ;
-        float coord_y = (float) ((float) max_y / (float) out_h * (float) SPPE_TENSOR_H - (float )padded_y) / (float) resize_ratio ;
+        float coord_x = (float) ((float) max_x / (float) out_w * (float) SPPE_TENSOR_W - (float )padded_x) / (float) resize_ratio + obj.rect.x;
+        float coord_y = (float) ((float) max_y / (float) out_h * (float) SPPE_TENSOR_H - (float )padded_y) / (float) resize_ratio + obj.rect.y;
         keypoint.p = cv::Point2f(coord_x, coord_y);
 //        keypoint.p = cv::Point2f(max_x * w / (float)out.w, max_y * h / (float)out.h);
         keypoint.prob = max_prob;
@@ -207,7 +207,7 @@ std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
     return target;
 }
 
-void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
+void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
 {
     // draw bone
     static const int joint_pairs[16][2] = {
@@ -219,19 +219,6 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
         KP p1 = keypoints[joint_pairs[i][0]];
         KP p2 = keypoints[joint_pairs[i][1]];
 
-//        p1.p.x *= obj.rect.width;
-//        p1.p.x += obj.rect.x;
-//        p1.p.y *= obj.rect.height;
-//        p1.p.y += obj.rect.y;
-//
-//        p2.p.x *= obj.rect.width;
-//        p2.p.x += obj.rect.x;
-//        p2.p.y *= obj.rect.height;
-//        p2.p.y += obj.rect.y;
-        p1.p.x += obj.rect.x;
-        p1.p.y += obj.rect.y;
-        p2.p.x += obj.rect.x;
-        p2.p.y += obj.rect.y;
 
         if (p1.prob < 0.04f || p2.prob < 0.04f)
             continue;
@@ -247,8 +234,8 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
 //        keypoint.p.x += obj.rect.x;
 //        keypoint.p.y *= obj.rect.height / SPPE_TENSOR_H;
 //        keypoint.p.y += obj.rect.y;
-        keypoint.p.x += obj.rect.x;
-        keypoint.p.y += obj.rect.y;
+//        keypoint.p.x += obj.rect.x;
+//        keypoint.p.y += obj.rect.y;
 
         // fprintf(stderr, "%.2f %.2f = %.5f\n", keypoint.p.x, keypoint.p.y, keypoint.prob);
 
@@ -258,14 +245,6 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, in
         cv::circle(bgr, keypoint.p, 3, cv::Scalar(0, 255, 0), -1);
     }
 
-    if(is_streaming)
-    {
-        cv::waitKey(10);
-    }
-    else
-    {
-        cv::waitKey(0);
-    }
 }
 
 //void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints, int is_streaming, const Object& obj)
