@@ -114,7 +114,7 @@ int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int t
     cv::resize(tmp, tmp, new_sz);
 
     tmp.copyTo(gray_img(cv::Rect(padded_x, padded_y, new_w, new_h)));
-    cv::imshow("test", gray_img);
+//    cv::imshow("test", gray_img);
 
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(gray_img.data, ncnn::Mat::PIXEL_BGR2RGB, gray_img.cols, gray_img.rows, target_size, target_size);
 

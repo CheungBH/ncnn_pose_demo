@@ -72,6 +72,8 @@ int sz_predictions = 5;
 
 int main(int argc, char** argv)
 {
+    double program_begin = ncnn::get_current_time();
+
     cv::Mat frame;
     std::vector<Object> objects;
 
@@ -130,6 +132,7 @@ int main(int argc, char** argv)
 
         if (frame.empty())
         {
+        	
             fprintf(stderr, "Failed to read from device %s.\n", devicepath);
             return -1;
         }
@@ -147,27 +150,27 @@ int main(int argc, char** argv)
     // init cnnNet
     static ncnn::Net cnnNet;
     static bool is_loaded_cnn = false;
-    if(!is_loaded_cnn)
-    {
-        cnnNet.opt.use_vulkan_compute = 1;
-
-        cnnNet.load_param(CNN_PARAM);
-        cnnNet.load_model(CNN_MODEL);
-        is_loaded_cnn = true;
-    }
+//    if(!is_loaded_cnn)
+//    {
+//        cnnNet.opt.use_vulkan_compute = 1;
+//
+//        cnnNet.load_param(CNN_PARAM);
+//        cnnNet.load_model(CNN_MODEL);
+//        is_loaded_cnn = true;
+//    }
 
     // init sppe
     static ncnn::Net sppeNet;
     static bool is_loaded_sppe = false;
 
-    if(!is_loaded_sppe)
-    {
-        sppeNet.opt.use_vulkan_compute = 1;
-
-        sppeNet.load_param(SPPE_PARAM);
-        sppeNet.load_model(SPPE_MODEL);
-        is_loaded_sppe = true;
-    }
+//    if(!is_loaded_sppe)
+//    {
+//        sppeNet.opt.use_vulkan_compute = 1;
+//
+//        sppeNet.load_param(SPPE_PARAM);
+//        sppeNet.load_model(SPPE_MODEL);
+//        is_loaded_sppe = true;
+//    }
 
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, write};
@@ -202,6 +205,8 @@ int main(int argc, char** argv)
 #endif
             if (frame.empty())
             {
+                double program_end = ncnn::get_current_time();
+                fprintf(stdout, "The whole program costs %.02lfms\n", program_end - program_begin);
                 fprintf(stderr, "OpenCV Failed to Capture from device %s\n", devicepath);
                 return -1;
             }
@@ -237,7 +242,7 @@ int main(int argc, char** argv)
         auto start_rp = std::chrono::steady_clock::now();
         std::vector<std::vector<std::pair<double, double>>> RP_res = RP.get_condition(b_boxes);
         RP.update_region(RP_res);
-        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
+//        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
         std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
         std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
 
@@ -272,23 +277,23 @@ int main(int argc, char** argv)
 //        cv::Mat padded_temp = sppe_padded_img.clone();
 //        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
 
-        int i = 0;
+//        int i = 0;
+//
+//        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
+//        {
+//            double area = itr->size[0]*itr->size[1];
+//            if(area > 10)
+//            {
+//                skeletons.push_back(sppeOneAll(*itr, sppeNet));
+////                skeletons.push_back(sppeOne(*itr, sppeNet));
+//                predictions.push_back(cnn(*itr, cnnNet));
+//                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming, objects[i]);
+//                // print_topk(predictions[itr-imgs.begin()], 2);
+//                i++;
+//            }
+//        }
 
-        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
-        {
-            double area = itr->size[0]*itr->size[1];
-            if(area > 10)
-            {
-                skeletons.push_back(sppeOneAll(*itr, sppeNet));
-//                skeletons.push_back(sppeOne(*itr, sppeNet));
-                predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(drown_frame, skeletons[itr-imgs.begin()], is_streaming, objects[i]);
-                // print_topk(predictions[itr-imgs.begin()], 2);
-                i++;
-            }
-        }
-
-        cv::imshow("img_cnt", im_cnt);
+//        cv::imshow("img_cnt", im_cnt);
         cv::imshow("pose", drown_frame);
         cv::waitKey(1);
 
