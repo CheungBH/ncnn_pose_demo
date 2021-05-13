@@ -72,6 +72,8 @@ int sz_predictions = 5;
 
 int main(int argc, char** argv)
 {
+    double program_begin = ncnn::get_current_time();
+
     cv::Mat frame;
     std::vector<Object> objects;
 
@@ -130,6 +132,7 @@ int main(int argc, char** argv)
 
         if (frame.empty())
         {
+        	
             fprintf(stderr, "Failed to read from device %s.\n", devicepath);
             return -1;
         }
@@ -202,6 +205,8 @@ int main(int argc, char** argv)
 #endif
             if (frame.empty())
             {
+                double program_end = ncnn::get_current_time();
+                fprintf(stdout, "The whole program costs %.02lfms\n", program_end - program_begin);
                 fprintf(stderr, "OpenCV Failed to Capture from device %s\n", devicepath);
                 return -1;
             }
@@ -221,7 +226,7 @@ int main(int argc, char** argv)
         auto start_rp = std::chrono::steady_clock::now();
         std::vector<std::vector<std::pair<double, double>>> RP_res = RP.get_condition(b_boxes);
         RP.update_region(RP_res);
-        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
+//        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
         std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
         std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
 
@@ -255,6 +260,7 @@ int main(int argc, char** argv)
 //        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
 //        cv::Mat padded_temp = sppe_padded_img.clone();
 //        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
+
 
         int i = 0;
 
