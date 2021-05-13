@@ -14,16 +14,19 @@
 
 #include "reshape_x86.h"
 
+#if __SSE2__
 #include <emmintrin.h>
-#if __AVX__
-#include "avx_usability.h"
-#endif // __AVX__
+#endif // __SSE2__
+
+#include "x86_usability.h"
 
 namespace ncnn {
 
 Reshape_x86::Reshape_x86()
 {
+#if __SSE2__
     support_packing = true;
+#endif // __SSE2__
 }
 
 int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const
@@ -45,6 +48,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             return ret;
 
         int out_elempack = 1;
+#if __SSE2__
         if (opt.use_packing_layout)
         {
             // resolve dst_elempack
@@ -59,6 +63,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             if (dims == 3) out_elempack = top_blob_unpacked.c % 4 == 0 ? 4 : 1;
 #endif
         }
+#endif // __SSE2__
         convert_packing(top_blob_unpacked, top_blob, out_elempack, opt);
 
         return 0;
@@ -95,6 +100,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             _h = total / _w;
 
         int out_elempack = 1;
+#if __SSE2__
         if (opt.use_packing_layout)
         {
 #if __AVX__
@@ -103,6 +109,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             out_elempack = _h % 4 == 0 ? 4 : 1;
 #endif
         }
+#endif // __SSE2__
         size_t out_elemsize = elemsize / elempack * out_elempack;
 
         if (dims == 2 && bottom_blob.h == _h && elempack == out_elempack)
@@ -121,7 +128,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             top_blob.dims = 2;
             top_blob.w = _w;
             top_blob.h = _h;
-            top_blob.cstep = _w * _h;
+            top_blob.cstep = (size_t)_w * _h;
             top_blob.elemsize = out_elemsize;
             top_blob.elempack = out_elempack;
 
@@ -146,6 +153,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
         int outw = top_blob.w;
         int outh = top_blob.h;
 
+#if __SSE2__
 #if __AVX__
         if (out_elempack == 8)
         {
@@ -255,6 +263,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
                 }
             }
         }
+#endif // __SSE2__
     }
 
     if (ndim == 3)
@@ -278,6 +287,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             _c = total / _h / _w;
 
         int out_elempack = 1;
+#if __SSE2__
         if (opt.use_packing_layout)
         {
 #if __AVX__
@@ -286,6 +296,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             out_elempack = _c % 4 == 0 ? 4 : 1;
 #endif
         }
+#endif // __SSE2__
         size_t out_elemsize = elemsize / elempack * out_elempack;
 
         if (dims == 3 && bottom_blob.c == _c && elempack == out_elempack)
@@ -313,6 +324,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
 
         int size = top_blob.w * top_blob.h;
 
+#if __SSE2__
 #if __AVX__
         if (out_elempack == 8)
         {
@@ -422,6 +434,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
                 }
             }
         }
+#endif // __SSE2__
 
         if (out_elempack == 1)
         {
@@ -432,6 +445,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
                 float* outptr = top_blob.channel(q);
 
                 int i = 0;
+#if __SSE2__
 #if __AVX__
                 for (; i + 7 < size; i += 8)
                 {
@@ -448,6 +462,7 @@ int Reshape_x86::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
                     ptr += 4;
                     outptr += 4;
                 }
+#endif // __SSE2__
                 for (; i < size; i++)
                 {
                     *outptr++ = *ptr++;

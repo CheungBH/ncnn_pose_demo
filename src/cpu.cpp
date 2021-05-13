@@ -71,6 +71,10 @@
 #endif
 #endif
 
+#if defined(__SSE3__)
+#include <immintrin.h>
+#endif
+
 namespace ncnn {
 
 #if defined __ANDROID__ || defined __linux__
@@ -86,8 +90,7 @@ static unsigned int get_elf_hwcap_from_proc_self_auxv()
 
 #define AT_HWCAP  16
 #define AT_HWCAP2 26
-#if __aarch64__
-
+#if __aarch64__ || __riscv_xlen == 64
     struct
     {
         uint64_t tag;
@@ -134,6 +137,11 @@ static unsigned int g_hwcaps = get_elf_hwcap_from_proc_self_auxv();
 // from arch/arm/include/uapi/asm/hwcap.h
 #define HWCAP_NEON  (1 << 12)
 #define HWCAP_VFPv4 (1 << 16)
+#endif
+
+#if __riscv
+// from arch/riscv/include/uapi/asm/hwcap.h
+#define COMPAT_HWCAP_ISA_V (1 << ('V' - 'A'))
 #endif
 
 #endif // defined __ANDROID__ || defined __linux__
@@ -356,7 +364,7 @@ int cpu_support_x86_avx2()
     __builtin_cpu_init();
 #endif
     return __builtin_cpu_supports("avx2");
-#elif defined(__GNUC__)
+#elif __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
     __builtin_cpu_init();
     return __builtin_cpu_supports("avx2");
 #else
@@ -364,6 +372,64 @@ int cpu_support_x86_avx2()
     NCNN_LOGE("AVX2 detection method is unknown for current compiler");
     return 0;
 #endif
+#else
+    return 0;
+#endif
+}
+
+int cpu_support_riscv_v()
+{
+#if defined __ANDROID__ || defined __linux__
+#if __riscv
+    return g_hwcaps & COMPAT_HWCAP_ISA_V;
+#else
+    return 0;
+#endif
+#else
+    return 0;
+#endif
+}
+
+int cpu_support_riscv_zfh()
+{
+#if __riscv
+#if __riscv_zfh
+    // https://github.com/riscv/riscv-zfinx/blob/master/Zfinx_spec.adoc#5-discovery
+    __fp16 a = 0;
+    asm volatile(
+        "fneg.h     %0, %0  \n"
+        : "=f"(a)
+        : "0"(a)
+        :);
+    union
+    {
+        __fp16 a;
+        unsigned short u;
+    } tmp;
+    tmp.a = a;
+    return tmp.u != 0 ? 1 : 0;
+#else
+    return 0;
+#endif
+#else
+    return 0;
+#endif
+}
+
+int cpu_riscv_vlenb()
+{
+#if __riscv
+    if (!cpu_support_riscv_v())
+        return 0;
+
+    // TODO asm word for riscv without v
+    int a = 0;
+    asm volatile(
+        "csrr   %0, vlenb   \n"
+        : "=r"(a)
+        :
+        : "memory");
+    return a;
 #else
     return 0;
 #endif
@@ -428,7 +494,8 @@ int get_little_cpu_count()
 
 int get_big_cpu_count()
 {
-    return get_cpu_thread_affinity_mask(2).num_enabled();
+    int big_cpu_count = get_cpu_thread_affinity_mask(2).num_enabled();
+    return big_cpu_count ? big_cpu_count : g_cpucount;
 }
 
 #if defined __ANDROID__ || defined __linux__
@@ -512,7 +579,7 @@ static int set_sched_affinity(const CpuSet& thread_affinity_mask)
 #if defined(__GLIBC__) || defined(__OHOS__)
     pid_t pid = syscall(SYS_gettid);
 #else
-#ifdef PI3
+#if defined(PI3) || (defined(__MUSL__) && __MUSL_MINOR__ <= 14)
     pid_t pid = getpid();
 #else
     pid_t pid = gettid();
@@ -730,9 +797,10 @@ int set_cpu_thread_affinity(const CpuSet& thread_affinity_mask)
 
     return 0;
 #elif __APPLE__
-    int num_threads = thread_affinity_mask.num_enabled();
 
 #ifdef _OPENMP
+    int num_threads = thread_affinity_mask.num_enabled();
+
     // set affinity for each thread
     set_omp_num_threads(num_threads);
     std::vector<int> ssarets(num_threads, 0);
@@ -843,6 +911,53 @@ void set_kmp_blocktime(int time_ms)
     kmp_set_blocktime(time_ms);
 #else
     (void)time_ms;
+#endif
+}
+
+static ncnn::ThreadLocalStorage tls_flush_denormals;
+
+int get_flush_denormals()
+{
+#if defined(__SSE3__)
+    return (int)reinterpret_cast<size_t>(tls_flush_denormals.get());
+#else
+    return 0;
+#endif
+}
+
+int set_flush_denormals(int flush_denormals)
+{
+    if (flush_denormals < 0 || flush_denormals > 3)
+    {
+        NCNN_LOGE("denormals_zero %d not supported", flush_denormals);
+        return -1;
+    }
+#if defined(__SSE3__)
+    if (flush_denormals == 0)
+    {
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
+        _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+    }
+    else if (flush_denormals == 1)
+    {
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+        _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+    }
+    else if (flush_denormals == 2)
+    {
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
+        _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    }
+    else if (flush_denormals == 3)
+    {
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+        _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    }
+
+    tls_flush_denormals.set(reinterpret_cast<void*>((size_t)flush_denormals));
+    return 0;
+#else
+    return 0;
 #endif
 }
 

@@ -55,10 +55,10 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     }
     cv::Size new_sz(new_w,new_h);
     cv::resize(img_tmp, img_tmp, new_sz);
-    cv::imshow("resized", img_tmp);
+//    cv::imshow("resized", img_tmp);
     img_tmp.copyTo(sppe_padded_img(cv::Rect(padded_x, padded_y, new_w, new_h)));
 
-    cv::imshow("padded", sppe_padded_img);
+//    cv::imshow("padded", sppe_padded_img);
 //    cv::waitKey(0);
 
 
