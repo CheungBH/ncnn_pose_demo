@@ -278,9 +278,9 @@ int main(int argc, char** argv)
 //            }
 //        }
 //
-//        cv::imshow("img_cnt", im_cnt);
-//        cv::imshow("pose", drown_frame);
-//        cv::waitKey(1);
+       // cv::imshow("img_cnt", im_cnt);
+       cv::imshow("pose", drown_frame);
+       cv::waitKey(1);
 
 
         if (!is_streaming)

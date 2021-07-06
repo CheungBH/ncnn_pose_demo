@@ -51,8 +51,8 @@ int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
 #ifndef YOLOV4_TINY
 //    const char* yolov4_param = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.param";
 //    const char* yolov4_model = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.bin";
-    const char* yolov4_param = "/home/hkuit155/Desktop/ncnn_pose_demo/weights/yolo_rgb/ncnn.param";
-    const char* yolov4_model = "/home/hkuit155/Desktop/ncnn_pose_demo/weights/yolo_rgb/ncnn.bin";
+    const char* yolov4_param = "../../weights/yolo_rgb/ncnn.param";
+    const char* yolov4_model = "../../weights/yolo_rgb/ncnn.bin";
     *target_size = 416;
 #else
     const char* yolov4_param = "yolov4-opt.param";
