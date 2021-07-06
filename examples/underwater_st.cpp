@@ -44,11 +44,11 @@
 #include "benchmark.h"
 #endif
 
-#define SPPE_PARAM "pose_models/alphapose.param"
-#define SPPE_MODEL "pose_models/alphapose.bin"
+#define SPPE_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.param"
+#define SPPE_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.bin"
 
-#define CNN_PARAM "CNN_models/resnet18.param"
-#define CNN_MODEL "CNN_models/resnet18.bin"
+#define CNN_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.param"
+#define CNN_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.bin"
 
 //#define YOLO_TENSOR_W 416
 //#define YOLO_TENSOR_H 416
