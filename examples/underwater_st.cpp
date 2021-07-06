@@ -44,11 +44,11 @@
 #include "benchmark.h"
 #endif
 
-#define SPPE_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.param"
-#define SPPE_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.bin"
-
-#define CNN_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.param"
-#define CNN_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.bin"
+//#define SPPE_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.param"
+//#define SPPE_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.bin"
+//
+//#define CNN_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.param"
+//#define CNN_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.bin"
 
 //#define YOLO_TENSOR_W 416
 //#define YOLO_TENSOR_H 416
@@ -148,29 +148,29 @@ int main(int argc, char** argv)
     bool write = false;
 
     // init cnnNet
-    static ncnn::Net cnnNet;
-    static bool is_loaded_cnn = false;
-    if(!is_loaded_cnn)
-    {
-        cnnNet.opt.use_vulkan_compute = 1;
-
-        cnnNet.load_param(CNN_PARAM);
-        cnnNet.load_model(CNN_MODEL);
-        is_loaded_cnn = true;
-    }
-
-    // init sppe
-    static ncnn::Net sppeNet;
-    static bool is_loaded_sppe = false;
-
-    if(!is_loaded_sppe)
-    {
-        sppeNet.opt.use_vulkan_compute = 1;
-
-        sppeNet.load_param(SPPE_PARAM);
-        sppeNet.load_model(SPPE_MODEL);
-        is_loaded_sppe = true;
-    }
+//    static ncnn::Net cnnNet;
+//    static bool is_loaded_cnn = false;
+//    if(!is_loaded_cnn)
+//    {
+//        cnnNet.opt.use_vulkan_compute = 1;
+//
+//        cnnNet.load_param(CNN_PARAM);
+//        cnnNet.load_model(CNN_MODEL);
+//        is_loaded_cnn = true;
+//    }
+//
+//    // init sppe
+//    static ncnn::Net sppeNet;
+//    static bool is_loaded_sppe = false;
+//
+//    if(!is_loaded_sppe)
+//    {
+//        sppeNet.opt.use_vulkan_compute = 1;
+//
+//        sppeNet.load_param(SPPE_PARAM);
+//        sppeNet.load_model(SPPE_MODEL);
+//        is_loaded_sppe = true;
+//    }
 
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, write};
@@ -246,41 +246,41 @@ int main(int argc, char** argv)
         auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
         std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
 
-        skeletons.clear();
-        predictions.clear();
-
-        auto crop_start = std::chrono::steady_clock::now();
-        std::cout << frame.size << std::endl;
-//        cropImageFrom(imgs, frame, objects);
-        cropImageOriginal(imgs, frame, objects);
-        auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
-        std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
-
-
-//        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
-//        cv::Mat padded_temp = sppe_padded_img.clone();
-//        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
-
-
-        int i = 0;
-
-        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
-        {
-            double area = itr->size[0]*itr->size[1];
-            if(area > 10)
-            {
-                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
-//                skeletons.push_back(sppeOne(*itr, sppeNet));
-                predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
-                // print_topk(predictions[itr-imgs.begin()], 2);
-                i++;
-            }
-        }
-
-        cv::imshow("img_cnt", im_cnt);
-        cv::imshow("pose", drown_frame);
-        cv::waitKey(1);
+//        skeletons.clear();
+//        predictions.clear();
+//
+//        auto crop_start = std::chrono::steady_clock::now();
+//        std::cout << frame.size << std::endl;
+////        cropImageFrom(imgs, frame, objects);
+//        cropImageOriginal(imgs, frame, objects);
+//        auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
+//        std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
+//
+//
+////        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+////        cv::Mat padded_temp = sppe_padded_img.clone();
+////        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
+//
+//
+//        int i = 0;
+//
+//        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
+//        {
+//            double area = itr->size[0]*itr->size[1];
+//            if(area > 10)
+//            {
+//                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
+////                skeletons.push_back(sppeOne(*itr, sppeNet));
+//                predictions.push_back(cnn(*itr, cnnNet));
+//                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
+//                // print_topk(predictions[itr-imgs.begin()], 2);
+//                i++;
+//            }
+//        }
+//
+//        cv::imshow("img_cnt", im_cnt);
+//        cv::imshow("pose", drown_frame);
+//        cv::waitKey(1);
 
 
         if (!is_streaming)
