@@ -50,5 +50,7 @@ else()
     target_link_libraries(underwater_st PRIVATE ncnn ${TORCH_LIBRARIES} ${OpenCV_LIBRARIES})
 endif()
 
-add_executable(server Server.cpp IOController.cpp)
-target_link_libraries(server pthread)
+add_executable(server Server.cpp IOController.cpp DepthDetector.cpp TimeLocBBox.cpp)
+target_link_libraries(server pthread ${OpenCV_LIBRARIES})
+target_include_directories(server PRIVATE ${OpenCV_INCLUDE_DIRS})
+

@@ -10,8 +10,6 @@
 #include "IOController.h"
 #include "TimeLocBbox.h"
 
-extern std::map<int, time_loc_bbox> tlb_list;
-
 int main()
 {
     uint32_t serverFd = 0, newSocket, valRead;
