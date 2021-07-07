@@ -14,6 +14,8 @@ file(GLOB SOURCE_FILES
 	"*.cpp"
         "*.h")
 
+list(FILTER SOURCE_FILES EXCLUDE REGEX "Server.cpp") 
+
 set(CMAKE_CXX_STANDARD 14)
 #find_package(Torch REQUIRED)
 find_package(OpenCV 3 REQUIRED)
@@ -47,3 +49,6 @@ else()
     target_include_directories(underwater_st PRIVATE ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(underwater_st PRIVATE ncnn ${TORCH_LIBRARIES} ${OpenCV_LIBRARIES})
 endif()
+
+add_executable(server Server.cpp IOController.cpp)
+target_link_libraries(server pthread)

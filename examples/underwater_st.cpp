@@ -34,6 +34,15 @@
 //#include "RegionProcessor.h"
 #include "DrownAnalysis.h"
 #include "Img_tns.h"
+#include "IOController.h"
+
+#include "TimeLocBbox.h"
+#include "DepthDetector.h"
+
+#include "json.hpp"
+
+// for convenience
+using json = nlohmann::json;
 
 #include <stdio.h>
 
@@ -66,6 +75,8 @@ int sz_boxes = 10;
 int sz_skeletons = 30;
 int sz_cnt = 10;
 int sz_predictions = 5;
+
+std::map<int, time_loc_bbox> tlb_list;
 
 #define SCREEN_W 960
 #define SCREEN_H 540
@@ -245,6 +256,40 @@ int main(int argc, char** argv)
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
         auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
         std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
+
+
+        if (b_boxes.size() > 0)
+        {
+            int i = 0;
+            for (auto const& drown_box : drown_boxes)
+            {
+                //Handle Normalized b_box_coord type variable for Depth Detector
+                b_box_coord b_box_normalized  = normalize_bbox(drown_box, frame.cols, frame.rows);
+                pool_coord pc = return_drowning_normalized_xy(b_box_normalized);
+                std::string datetime = currentDateTime();
+                time_loc_bbox tlb{cam_id, return_area_id(pc), datetime, pc, b_box_normalized};
+                std::cout << "tlbToString(tlb): " << tlbToString(tlb) << "  Time:" << std::stol(datetime) << std::endl;
+                {
+                    std::lock_guard<std::mutex> lock_tlbl(m_tlbl);
+                    tlb_list.insert(std::make_pair(i, tlb));
+                    ++i;
+                    if(i == 100)
+                        i = 0;
+                }
+            }
+            // std::cout << "" << std::endl;
+        }
+
+        json drowningJsonData;
+
+        drowningJsonData["rstp"] = 123;
+        drowningJsonData["camID"] = 123;
+        drowningJsonData["areaID"] = 123;
+        drowningJsonData["time"] = 123;
+        drowningJsonData["poolCoord"] = 123;
+        drowningJsonData["broundingBoxCoord"] = 123;
+
+        IOController::clientSend(drowningJsonData.dump());
 
 //        skeletons.clear();
 //        predictions.clear();
