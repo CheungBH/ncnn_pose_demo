@@ -286,7 +286,7 @@ int main(int argc, char** argv)
             for (auto const& tlb : tlb_list)
             {
 
-                tlb_string += "\n" + tlbToString(tlb);
+                tlb_string += tlbToString(tlb);
             }
             std::cout << "tlb_string: " << tlb_string << std::endl;
             IOController::clientSend(tlb_string);

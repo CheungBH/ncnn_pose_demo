@@ -6,6 +6,8 @@ struct IOController
     static uint32_t clientPort;
     static uint32_t serverPort;
 
+    static std::string serverMessage;
+
     static void clientSend(const std::string& data);
     static void serverListen(uint32_t newSocket);
 };
