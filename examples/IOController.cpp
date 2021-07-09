@@ -65,8 +65,10 @@ void IOController::serverListen(uint32_t newSocket)
         {
             send(newSocket, &serverMsg, valread, 0);
         }
+
+        std::cout << serverMsg << std::endl;
+
         serverMsg = "";
         valread = 0;
     }
-    std::cout << buffer << std::endl;
 }
