@@ -11,8 +11,6 @@
 
 uint32_t IOController::clientPort = CLIENTPORT;
 uint32_t IOController::serverPort = SERVERPORT;
-uint32_t IOController::valread = 0;
-std::string IOController::serverMsg = "";
 
 void IOController::clientSend(const std::string& data)
 {
@@ -49,26 +47,24 @@ void IOController::clientSend(const std::string& data)
 void IOController::serverListen(uint32_t newSocket)
 {
     char buffer[1024] { 0 };
-    valread += read(newSocket, buffer, 1024);
+    uint32_t valread = read(newSocket, buffer, 1024);
+    std::string serverMsg = buffer;
 
-    if (buffer[0] == '{')
+    if (buffer[0] == '1')
     {
-        serverMsg += buffer;
-    }
-    else if (buffer[0] == '1')
-    {
-        if (serverMsg.size() == 0)
+        if (valread == 0)
         {
-            send(newSocket, "{}", 2, 0);
+            // send(newSocket, "{}", 2, 0);
         }
         else
         {
-            send(newSocket, &serverMsg, valread, 0);
+            // send(newSocket, &serverMsg, valread, 0);
         }
 
-        std::cout << serverMsg << std::endl;
-
-        serverMsg = "";
-        valread = 0;
+        // std::cout << serverMsg << std::endl;
     }
+
+    close(newSocket);
+
+    std::cout << serverMsg << std::endl;
 }

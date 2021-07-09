@@ -76,7 +76,7 @@ int sz_skeletons = 30;
 int sz_cnt = 10;
 int sz_predictions = 5;
 
-std::map<int, time_loc_bbox> tlb_list;
+std::vector<time_loc_bbox> tlb_list;
 
 #define SCREEN_W 960
 #define SCREEN_H 540
@@ -259,7 +259,6 @@ int main(int argc, char** argv)
 
         if (b_boxes.size() > 0)
         {
-            int i = 0;
             for (auto const& drown_box : drown_boxes)
             {   
                 int cam_id = 1;
@@ -269,32 +268,29 @@ int main(int argc, char** argv)
                 std::string datetime = currentDateTime();
                 time_loc_bbox tlb{cam_id, return_area_id(pc), datetime, pc, b_box_normalized};
                 std::cout << "tlbToString(tlb): " << tlbToString(tlb) << "  Time:" << std::stol(datetime) << std::endl;
+
+                tlb_list.push_back(tlb);
+                
+                if (tlb_list.size() > 100)
                 {
-                    tlb_list.insert(std::make_pair(i, tlb));
-                    ++i;
-                    if(i == 100)
-                    {
-                        i = 0;
-                        tlb_list.clear();           
-                    }
+                    tlb_list.clear();
                 }
             }
             // std::cout << "" << std::endl;
         }
 
         std::string tlb_string = "";
-        {
-            if(tlb_list.size() != 0)
-            {
-                for (auto const& tlb : tlb_list)
-                {
 
-                    tlb_string = tlb_string + tlbToString(tlb.second);
-                }
-                std::cout << "tlb_string: " << tlb_string << std::endl;
-                IOController::clientSend(tlb_string);
-                tlb_list.clear();
+        if(tlb_list.size() != 0)
+        {
+            for (auto const& tlb : tlb_list)
+            {
+
+                tlb_string += "\n" + tlbToString(tlb);
             }
+            std::cout << "tlb_string: " << tlb_string << std::endl;
+            IOController::clientSend(tlb_string);
+            tlb_list.clear();
         }
 
         // IOController::clientSend(tlb_string);

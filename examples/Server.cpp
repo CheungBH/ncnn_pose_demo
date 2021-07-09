@@ -47,7 +47,7 @@ int main()
 
 	std::cout << "Socket binded." << std::endl;
 
-	if (listen(serverFd , 32) < 0)
+	if (listen(serverFd , 8) < 0)
     {
         std::cerr << "Socket listen error." << std::endl;
 		return 1;
