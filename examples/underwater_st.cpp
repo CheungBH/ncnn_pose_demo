@@ -39,10 +39,7 @@
 #include "TimeLocBbox.h"
 #include "DepthDetector.h"
 
-#include "json.hpp"
-
-// for convenience
-using json = nlohmann::json;
+#include "ConsoleVariableSystem.h"
 
 #include <stdio.h>
 

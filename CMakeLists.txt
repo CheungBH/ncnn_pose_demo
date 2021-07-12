@@ -149,7 +149,7 @@ if(NCNN_VULKAN)
             message(FATAL_ERROR "The submodules were not downloaded! Please update submodules with \"git submodule update --init\" and try again.")
         else()
             # glslang requires c++11
-            set(CMAKE_CXX_STANDARD 14)
+            set(CMAKE_CXX_STANDARD 17)
 
             option(BUILD_EXTERNAL "" OFF)
             option(ENABLE_SPVREMAPPER "" OFF)
