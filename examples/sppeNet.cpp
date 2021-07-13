@@ -3,11 +3,10 @@
 //
 #include "sppeNet.h"
 #include "Img_tns.h"
+#include "ConsoleVariableSystem.h"
 
 #include <algorithm>
 #include <chrono>
-
-extern int SPPE_TENSOR_H, SPPE_TENSOR_W;
 
 void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
 {
@@ -27,12 +26,12 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     std::vector<KP> target;
     cv::Mat img_tmp = src.clone();
     cv::Scalar grey_value(128, 128, 128);
-    cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+    cv::Mat sppe_padded_img(*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H"), *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W"), CV_8UC3, grey_value);
 
     int original_w = src.cols, original_h = src.rows;
     double resize_ratio = 1;
-    double resize_ratio_1 = (double)SPPE_TENSOR_W/original_w;
-    double resize_ratio_2 = (double)SPPE_TENSOR_H/original_h;
+    double resize_ratio_1 = (double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W")/original_w;
+    double resize_ratio_2 = (double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H")/original_h;
 
     double resize_ratio_final = resize_ratio_1 < resize_ratio_2 ? resize_ratio_1 : resize_ratio_2;
     resize_ratio = resize_ratio_final;
@@ -44,12 +43,12 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     if(original_w > original_h)
     {
         padded_x = 0;
-        padded_y = (0.5)*((double)SPPE_TENSOR_H - new_h);
+        padded_y = (0.5)*((double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H") - new_h);
         //std::cout << "w: " << img.cols << " h: " << img.rows << " resize_ratio: " << resize_ratio <<std::endl;
     }
     else
     {
-        padded_x = (0.5)*((double)SPPE_TENSOR_W - new_w);
+        padded_x = (0.5)*((double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W") - new_w);
         padded_y = 0;
         //std::cout << "w: " << img.cols << " h: " << img.rows << " resize_ratio: " << resize_ratio <<std::endl;
     }
@@ -65,8 +64,8 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     auto start = std::chrono::steady_clock::now();
 
 
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(sppe_padded_img.data, ncnn::Mat::PIXEL_BGR2RGB, SPPE_TENSOR_W,
-                                                 SPPE_TENSOR_H, SPPE_TENSOR_W, SPPE_TENSOR_H);
+    ncnn::Mat in = ncnn::Mat::from_pixels_resize(sppe_padded_img.data, ncnn::Mat::PIXEL_BGR2RGB, *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W"),
+                                                *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H"), *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W"), *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H"));
 
     const float mean_vals[3] = {0.485f*255.f, 0.456f*255.f, 0.406f*255.f};
     const float norm_vals[3] = {1/0.229f/255.f, 1/0.224f/255.f, 1/0.225f/255.f};
@@ -108,8 +107,8 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
         }
 
         KP keypoint;
-        float coord_x = (float) ((float) max_x / (float) out_w * (float) SPPE_TENSOR_W - (float )padded_x) / (float) resize_ratio + obj.rect.x;
-        float coord_y = (float) ((float) max_y / (float) out_h * (float) SPPE_TENSOR_H - (float )padded_y) / (float) resize_ratio + obj.rect.y;
+        float coord_x = (float) ((float) max_x / (float) out_w * (float) *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W") - (float )padded_x) / (float) resize_ratio + obj.rect.x;
+        float coord_y = (float) ((float) max_y / (float) out_h * (float) *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H") - (float )padded_y) / (float) resize_ratio + obj.rect.y;
         keypoint.p = cv::Point2f(coord_x, coord_y);
 //        keypoint.p = cv::Point2f(max_x * w / (float)out.w, max_y * h / (float)out.h);
         keypoint.prob = max_prob;
@@ -128,7 +127,7 @@ void sppeNet::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const st
 
     //...
     cv::Scalar grey_value(128, 128, 128);
-    cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+    cv::Mat sppe_padded_img(*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H"), *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W"), CV_8UC3, grey_value);
     cv::Mat padded_temp = sppe_padded_img.clone();
 
     for(auto itr = obj.begin(); itr != obj.end(); itr++)
@@ -252,9 +251,9 @@ std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
 //    {
 //        KP keypoint = keypoints[i];
 //
-////        keypoint.p.x *= obj.rect.width / SPPE_TENSOR_W;
+////        keypoint.p.x *= obj.rect.width / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W");
 ////        keypoint.p.x += obj.rect.x;
-////        keypoint.p.y *= obj.rect.height / SPPE_TENSOR_H;
+////        keypoint.p.y *= obj.rect.height / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H");
 ////        keypoint.p.y += obj.rect.y;
 ////        keypoint.p.x += obj.rect.x;
 ////        keypoint.p.y += obj.rect.y;
@@ -295,9 +294,9 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
     {
         KP keypoint = keypoints[i];
 
-//        keypoint.p.x *= obj.rect.width / SPPE_TENSOR_W;
+//        keypoint.p.x *= obj.rect.width / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W");
 //        keypoint.p.x += obj.rect.x;
-//        keypoint.p.y *= obj.rect.height / SPPE_TENSOR_H;
+//        keypoint.p.y *= obj.rect.height / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H");
 //        keypoint.p.y += obj.rect.y;
 //        keypoint.p.x += obj.rect.x;
 //        keypoint.p.y += obj.rect.y;
@@ -324,14 +323,14 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
 //        KP p1 = keypoints[joint_pairs[i][0]];
 //        KP p2 = keypoints[joint_pairs[i][1]];
 //
-//        p1.p.x *= obj.rect.width / SPPE_TENSOR_W;
+//        p1.p.x *= obj.rect.width / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W");
 //        p1.p.x += obj.rect.x;
-//        p1.p.y *= obj.rect.height / SPPE_TENSOR_H;
+//        p1.p.y *= obj.rect.height / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H");
 //        p1.p.y += obj.rect.y;
 //
-//        p2.p.x *= obj.rect.width / SPPE_TENSOR_W;
+//        p2.p.x *= obj.rect.width / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W");
 //        p2.p.x += obj.rect.x;
-//        p2.p.y *= obj.rect.height / SPPE_TENSOR_H;
+//        p2.p.y *= obj.rect.height / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H");
 //        p2.p.y += obj.rect.y;
 //
 //        if (p1.prob < 0.04f || p2.prob < 0.04f)
@@ -344,9 +343,9 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
 //    {
 //        KP keypoint = keypoints[i];
 //
-//        keypoint.p.x *= obj.rect.width / SPPE_TENSOR_W;
+//        keypoint.p.x *= obj.rect.width / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_W");
 //        keypoint.p.x += obj.rect.x;
-//        keypoint.p.y *= obj.rect.height / SPPE_TENSOR_H;
+//        keypoint.p.y *= obj.rect.height / *ConsoleVariableSystem::get()->getIntVariableCurrentByHash("SPPE_TENSOR_H");
 //        keypoint.p.y += obj.rect.y;
 //
 //        // fprintf(stderr, "%.2f %.2f = %.5f\n", keypoint.p.x, keypoint.p.y, keypoint.prob);

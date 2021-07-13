@@ -61,29 +61,26 @@
 //#define YOLO_TENSOR_C 3
 //#define YOLO_TENSOR_N 1
 
-extern int YOLO_TENSOR_W , YOLO_TENSOR_H, YOLO_TENSOR_C, YOLO_TENSOR_N;
-extern int SPPE_TENSOR_W , SPPE_TENSOR_H, SPPE_TENSOR_C, SPPE_TENSOR_N;
+AutoInt YOLO_TENSOR_W(416, "YOLO_TENSOR_W", "YOLO_TENSOR_W", ConsoleVariableFlag::NONE);
+AutoInt YOLO_TENSOR_H(416, "YOLO_TENSOR_H", "YOLO_TENSOR_H", ConsoleVariableFlag::NONE);
+AutoInt YOLO_TENSOR_C(3, "YOLO_TENSOR_C", "YOLO_TENSOR_C", ConsoleVariableFlag::NONE);
+AutoInt YOLO_TENSOR_N(1, "YOLO_TENSOR_N", "YOLO_TENSOR_N", ConsoleVariableFlag::NONE);
+AutoInt SPPE_TENSOR_W(256, "SPPE_TENSOR_W", "SPPE_TENSOR_W", ConsoleVariableFlag::NONE);
+AutoInt SPPE_TENSOR_H(256, "SPPE_TENSOR_H", "SPPE_TENSOR_H", ConsoleVariableFlag::NONE);
+AutoInt SPPE_TENSOR_C(3, "SPPE_TENSOR_C", "SPPE_TENSOR_C", ConsoleVariableFlag::NONE);
+AutoInt SPPE_TENSOR_N(1, "SPPE_TENSOR_N", "SPPE_TENSOR_N", ConsoleVariableFlag::NONE);
 
 using namespace yolov;
 using namespace sppeNet;
 using namespace cnnNet;
 
-int sz_boxes = 10;
-int sz_skeletons = 30;
-int sz_cnt = 10;
-int sz_predictions = 5;
-
-std::vector<time_loc_bbox> tlb_list;
-
 #define SCREEN_W 960
 #define SCREEN_H 540
 
-AutoInt intTest(1, "intTest", "This is a test for int", ConsoleVariableFlag::NONE);
-AutoFloat floatTest(1.0, "floatTest", "This is a test for int", ConsoleVariableFlag::NONE);
-AutoString strnigTest("10.0", "stringTest", "This is a test for int", ConsoleVariableFlag::NONE);
-
 int main(int argc, char** argv)
 {
+    std::vector<time_loc_bbox> tlb_list;
+
     double program_begin = ncnn::get_current_time();
 
     cv::Mat frame;
@@ -231,7 +228,8 @@ int main(int argc, char** argv)
 
         draw_objects(frame, objects, is_streaming); //Draw detection results on opencv image
 
-        for (const auto& object : objects) {
+        for (const auto& object : objects)
+        {
             b_boxes.push_back(object.rect);
         }
 
@@ -280,32 +278,27 @@ int main(int argc, char** argv)
             // std::cout << "" << std::endl;
         }
 
-        std::string tlb_string = "";
+        std::stringstream tlb_string;
 
-        if(tlb_list.size() != 0)
+        if (tlb_list.size() != 0)
         {
-            for (auto const& tlb : tlb_list)
+            for (const auto& tlb : tlb_list)
             {
-
-                tlb_string += tlbToString(tlb);
+                tlb_string << tlbToString(tlb);
             }
-            std::cout << "tlb_string: " << tlb_string << std::endl;
-            IOController::clientSend(tlb_string);
+            std::cout << "tlb_string: " << tlb_string.str() << std::endl;
+
+            try
+            {
+                IOController::clientSend(tlb_string.str());
+            }
+            catch (const std::runtime_error& e)
+            {
+                std::cerr << e.what() << std::endl;
+            }
+
             tlb_list.clear();
         }
-
-        // IOController::clientSend(tlb_string);
-    
-        // json drowningJsonData;
-
-        // drowningJsonData["rstp"] = 123;
-        // drowningJsonData["camID"] = 123;
-        // drowningJsonData["areaID"] = 123;
-        // drowningJsonData["time"] = 123;
-        // drowningJsonData["poolCoord"] = 123;
-        // drowningJsonData["broundingBoxCoord"] = 123;
-
-        // IOController::clientSend(drowningJsonData.dump());
 
 //        skeletons.clear();
 //        predictions.clear();

@@ -8,15 +8,7 @@
 #include <algorithm>
 #include <chrono>
 
-int YOLO_TENSOR_W = 416;
-int YOLO_TENSOR_H = 416;
-int YOLO_TENSOR_C = 3;
-int YOLO_TENSOR_N = 1;
-
-int SPPE_TENSOR_W  = 256;
-int SPPE_TENSOR_H = 256;
-int SPPE_TENSOR_C = 3;
-int SPPE_TENSOR_B = 1;
+#include "ConsoleVariableSystem.h"
 
 //yolo begin
 
@@ -214,10 +206,10 @@ int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects
     {
         const float* values = out.row(i);
 
-        double xmin = ( values[2]* img_w + (-(double)0.5*((double)YOLO_TENSOR_W - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
-        double ymin = ( values[3]* img_h + (-(double)0.5*((double)YOLO_TENSOR_H - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
-        double xmax = ( values[4]* img_w + (-(double)0.5*((double)YOLO_TENSOR_W - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
-        double ymax = ( values[5]* img_h + (-(double)0.5*((double)YOLO_TENSOR_H - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
+        double xmin = ( values[2]* img_w + (-(double)0.5*((double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("YOLO_TENSOR_W") - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
+        double ymin = ( values[3]* img_h + (-(double)0.5*((double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("YOLO_TENSOR_H") - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
+        double xmax = ( values[4]* img_w + (-(double)0.5*((double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("YOLO_TENSOR_W") - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
+        double ymax = ( values[5]* img_h + (-(double)0.5*((double)*ConsoleVariableSystem::get()->getIntVariableCurrentByHash("YOLO_TENSOR_H") - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
 //        double width = xmax - xmin;
 //        double height = ymax - ymin;
 
