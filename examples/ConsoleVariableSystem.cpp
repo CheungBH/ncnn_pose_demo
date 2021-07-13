@@ -244,7 +244,7 @@ ConsoleVariableParameter* ConsoleVariableSystemImplementation::createStringVaria
 	ConsoleVariableParameter* newParameter = initVariable(name, description);
 	if (!newParameter) return nullptr;
 
-	newParameter->type = ConsoleVariableType::FLOAT;
+	newParameter->type = ConsoleVariableType::STRING;
 	
     getVariableArray<std::string>()->pushBack(currentValue, newParameter);
 
