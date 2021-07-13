@@ -78,6 +78,10 @@ std::vector<time_loc_bbox> tlb_list;
 #define SCREEN_W 960
 #define SCREEN_H 540
 
+AutoInt intTest(1, "intTest", "This is a test for int", ConsoleVariableFlag::NONE);
+AutoFloat floatTest(1.0, "floatTest", "This is a test for int", ConsoleVariableFlag::NONE);
+AutoString strnigTest("10.0", "stringTest", "This is a test for int", ConsoleVariableFlag::NONE);
+
 int main(int argc, char** argv)
 {
     double program_begin = ncnn::get_current_time();
