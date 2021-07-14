@@ -43,7 +43,7 @@
 
 #include <stdio.h>
 
-#define NCNN_PROFILING
+// #define NCNN_PROFILING
 #define YOLOV4_TINY //Using yolov4_tiny, if undef, using original yolov4
 
 #ifdef NCNN_PROFILING
@@ -61,15 +61,6 @@
 //#define YOLO_TENSOR_C 3
 //#define YOLO_TENSOR_N 1
 
-AutoInt YOLO_TENSOR_W(416, "YOLO_TENSOR_W", "YOLO_TENSOR_W", ConsoleVariableFlag::NONE);
-AutoInt YOLO_TENSOR_H(416, "YOLO_TENSOR_H", "YOLO_TENSOR_H", ConsoleVariableFlag::NONE);
-AutoInt YOLO_TENSOR_C(3, "YOLO_TENSOR_C", "YOLO_TENSOR_C", ConsoleVariableFlag::NONE);
-AutoInt YOLO_TENSOR_N(1, "YOLO_TENSOR_N", "YOLO_TENSOR_N", ConsoleVariableFlag::NONE);
-AutoInt SPPE_TENSOR_W(256, "SPPE_TENSOR_W", "SPPE_TENSOR_W", ConsoleVariableFlag::NONE);
-AutoInt SPPE_TENSOR_H(256, "SPPE_TENSOR_H", "SPPE_TENSOR_H", ConsoleVariableFlag::NONE);
-AutoInt SPPE_TENSOR_C(3, "SPPE_TENSOR_C", "SPPE_TENSOR_C", ConsoleVariableFlag::NONE);
-AutoInt SPPE_TENSOR_N(1, "SPPE_TENSOR_N", "SPPE_TENSOR_N", ConsoleVariableFlag::NONE);
-
 using namespace yolov;
 using namespace sppeNet;
 using namespace cnnNet;
@@ -81,7 +72,7 @@ int main(int argc, char** argv)
 {
     std::vector<time_loc_bbox> tlb_list;
 
-    double program_begin = ncnn::get_current_time();
+    // double program_begin = ncnn::get_current_time();
 
     cv::Mat frame;
     std::vector<Object> objects;
@@ -204,14 +195,13 @@ int main(int argc, char** argv)
 #endif
 
             cap >> frame;
-            s_frame = frame.clone();
-            drown_frame = frame.clone();
-            im_cnt = im_raw.clone();
+            // s_frame = frame.clone();
+            // drown_frame = frame.clone();
+            // im_cnt = im_raw.clone();
 
 #ifdef NCNN_PROFILING
             double t_capture_end = ncnn::get_current_time();
             fprintf(stdout, "NCNN OpenCV capture time %.02lfms\n", t_capture_end - t_capture_start);
-#endif
             if (frame.empty())
             {
                 double program_end = ncnn::get_current_time();
@@ -219,6 +209,7 @@ int main(int argc, char** argv)
                 fprintf(stderr, "OpenCV Failed to Capture from device %s\n", devicepath);
                 return -1;
             }
+#endif
         }
 
 
@@ -226,35 +217,35 @@ int main(int argc, char** argv)
 
         std::vector<cv::Rect> b_boxes;
 
-        draw_objects(frame, objects, is_streaming); //Draw detection results on opencv image
+        // draw_objects(frame, objects, is_streaming); //Draw detection results on opencv image
 
         for (const auto& object : objects)
         {
             b_boxes.push_back(object.rect);
         }
 
-        auto start_rp = std::chrono::steady_clock::now();
+        // auto start_rp = std::chrono::steady_clock::now();
         std::vector<std::vector<std::pair<double, double>>> RP_res = RP.get_condition(b_boxes);
         RP.update_region(RP_res);
 //        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
-        std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
-        std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
+        // std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
+        // std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
 
-        auto start_sort = std::chrono::steady_clock::now();
+        // auto start_sort = std::chrono::steady_clock::now();
 //		std::vector<std::vector<float>> untracked_boxes = utils_main.Rect2vf(b_boxes);
         std::vector<TrackingBox> frameTrackingResult = SORT(b_boxes);
-        vis_id(frameTrackingResult, s_frame);
-        auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
-        std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
+        // vis_id(frameTrackingResult, s_frame);
+        // auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
+        // std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
         std::vector<int> alarm_idx = RP.get_alarming_id(frameTrackingResult);
 
-        auto drown_start =  std::chrono::steady_clock::now();
-        analysis.update(frameTrackingResult, drown_frame.rows);
+        // auto drown_start =  std::chrono::steady_clock::now();
+        analysis.update(frameTrackingResult, frame.rows);
         // analysis.print();
-        drown_frame = analysis.visualize(drown_frame);
+        analysis.visualize(frame);
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
-        auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
-        std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
+        // auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
+        // std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
 
         if (b_boxes.size() > 0)
         {
@@ -266,7 +257,7 @@ int main(int argc, char** argv)
                 pool_coord pc = return_drowning_normalized_xy(b_box_normalized);
                 std::string datetime = currentDateTime();
                 time_loc_bbox tlb{cam_id, return_area_id(pc), datetime, pc, b_box_normalized};
-                std::cout << "tlbToString(tlb): " << tlbToString(tlb) << "  Time:" << std::stol(datetime) << std::endl;
+                // std::cout << "tlbToString(tlb): " << tlbToString(tlb) << "  Time:" << std::stol(datetime) << std::endl;
 
                 tlb_list.push_back(tlb);
                 
@@ -286,7 +277,7 @@ int main(int argc, char** argv)
             {
                 tlb_string << tlbToString(tlb);
             }
-            std::cout << "tlb_string: " << tlb_string.str() << std::endl;
+            // std::cout << "tlb_string: " << tlb_string.str() << std::endl;
 
             try
             {
@@ -333,7 +324,7 @@ int main(int argc, char** argv)
 //        }
 //
        // cv::imshow("img_cnt", im_cnt);
-       cv::imshow("pose", drown_frame);
+       cv::imshow("pose", frame);
        cv::waitKey(1);
 
 

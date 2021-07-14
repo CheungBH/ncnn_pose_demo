@@ -232,7 +232,7 @@ std::vector<TrackingBox> SORT(std::vector<cv::Rect> bboxes) {
     return frameTrackingResult;
 }
 
-void vis_id(std::vector<TrackingBox> tracking_result, cv::Mat frm){
+void vis_id(const std::vector<TrackingBox>& tracking_result, cv::Mat& frm){
     for (auto tb : tracking_result) {
         string num = std::to_string(tb.id);
         cv::Point pt = cv::Point(tb.box.x, tb.box.y);

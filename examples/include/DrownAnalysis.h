@@ -56,7 +56,7 @@ public:
 	void newEntry();
 	bool checkEntryExtist(const int& id);
 
-	cv::Mat visualize(cv::Mat img);
+	void visualize(cv::Mat& img);
 
 	cv::Scalar convert_color(int id);
 

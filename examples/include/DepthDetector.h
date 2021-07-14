@@ -29,7 +29,7 @@ struct b_box_coord{
 	double y2;
 };
 
-b_box_coord normalize_bbox(cv::Rect rect, double col, double row);
+b_box_coord normalize_bbox(const cv::Rect& rect, double col, double row);
 
 //Return pool coordinates when inputing bounding box data
 pool_coord return_drowning_normalized_xy(const b_box_coord& input);

@@ -88,7 +88,7 @@ bool DrownAnalysis::checkEntryExtist(const int& id) {
 }
 
 
-cv::Mat DrownAnalysis::visualize(cv::Mat img) {
+void DrownAnalysis::visualize(cv::Mat& img) {
 	cv::line(img, cv::Point(0, LEVEL*img.rows), cv::Point(img.cols, LEVEL*img.rows), cv::Scalar(201, 7, 22), 4);
 	for (const auto& id2box : id2boxes) {
 		cv::Scalar color = DrownAnalysis::convert_color(id2box.id);
@@ -98,7 +98,6 @@ cv::Mat DrownAnalysis::visualize(cv::Mat img) {
 		cv::Point pt = cv::Point(id2box.box.x, id2box.box.y);
 		cv::putText(img, "id" + std::to_string(id2box.id) + ":" + std::to_string(id2cnt[id2box.id]/ SCALAR) + "s", pt, cv::FONT_HERSHEY_DUPLEX, 1, color, 2);
 	}
-	return img;
 }
 
 cv::Scalar DrownAnalysis::convert_color(int id) {

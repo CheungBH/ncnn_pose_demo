@@ -16,7 +16,7 @@
 //#define POOL_WIDTH_IN_METER 16.0
 
 
-b_box_coord normalize_bbox(cv::Rect rect, double col, double row)
+b_box_coord normalize_bbox(const cv::Rect& rect, double col, double row)
 {
     double x1 = rect.x; double y1 = rect.y;
     double x2 = x1+rect.width; double y2 = y1+rect.height;
@@ -62,12 +62,12 @@ pool_coord return_drowning_normalized_xy(const b_box_coord& input) {
     else{
         //throw "Out of Range!";
     }
-    std::cout << "pool.x : " << pool.x << "pool.y : " << pool.y  << std::endl;
+    // std::cout << "pool.x : " << pool.x << "pool.y : " << pool.y  << std::endl;
 
     pool.x /= POOL_WIDTH_IN_METER;
     pool.y /= POOL_LENGTH_IN_METER;
 
-    std::cout << "norm pool.x : " << pool.x << "norm pool.y : " << pool.y  << std::endl;
+    // std::cout << "norm pool.x : " << pool.x << "norm pool.y : " << pool.y  << std::endl;
 
 
 
