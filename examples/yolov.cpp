@@ -26,8 +26,9 @@ int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
 {
     /* --> Set the params you need for the ncnn inference <-- */
 
-    yolov4->opt.num_threads = 4; //You need to compile with libgomp for multi thread support
-
+    yolov4->opt.num_threads = 2; //You need to compile with libgomp for multi thread support
+    yolov4->opt.openmp_blocktime = 0;
+    
     yolov4->opt.use_vulkan_compute = true; //You need to compile with libvulkan for gpu support
 
     yolov4->opt.use_winograd_convolution = true;

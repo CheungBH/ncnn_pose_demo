@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        cap.open(devicepath);
+        cap = cv::VideoCapture("filesrc location=" + std::string(devicepath) + " ! qtdemux ! queue ! h265parse ! omxh265dec ! nvvidconv ! video/x-raw, width=(int)1280, height=(int)720, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink");
 
         if (!cap.isOpened())
         {
@@ -324,9 +324,8 @@ int main(int argc, char** argv)
 //        }
 //
        // cv::imshow("img_cnt", im_cnt);
-       cv::imshow("pose", frame);
-       cv::waitKey(1);
-
+        cv::imshow("pose", frame);
+        cv::waitKey(1);
 
         if (!is_streaming)
         {   //If it is a still image, exit!
