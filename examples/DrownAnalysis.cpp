@@ -1,12 +1,21 @@
 #include "DrownAnalysis.h"
+#include "ConsoleVariableSystem.h"
+
 #include <iostream>
+
+AutoInt YELLOW_CNT(5, "YELLOW_CNT", "YELLOW_CNT", ConsoleVariableFlag::NONE);
+AutoInt RED_CNT(8, "RED_CNT", "RED_CNT", ConsoleVariableFlag::NONE);
+AutoFloat LEVEL(0.3, "LEVEL", "LEVEL", ConsoleVariableFlag::NONE);
+AutoFloat RATIO(0.6, "RATIO", "RATIO", ConsoleVariableFlag::NONE);
+AutoInt MAX_CNT(15, "MAX_CNT", "MAX_CNT", ConsoleVariableFlag::NONE);
+AutoInt SCALAR(1000, "SCALAR", "SCALAR", ConsoleVariableFlag::NONE);
 
 bool DrownAnalysis::judge(const cv::Rect_<float>& box_coord) {
 	// drown detection
 	// if ((box_coord.y + box_coord.height - box_coord.height * RATIO) < LEVEL){
 	int y2 = box_coord.y + box_coord.height;
 	int y1 = box_coord.y;
-	if ((y2 - (y2 - y1) * RATIO) < LEVEL*img_height) {
+	if ((y2 - (y2 - y1) * RATIO.get()) < LEVEL.get()*img_height) {
 		return false;
 	}
 	else {
@@ -32,11 +41,11 @@ void DrownAnalysis::update(const std::vector<TrackingBox>& frameTrackingResults,
 			DrownAnalysis::newEntry();
 		}
 		if (judge(frameTrackingResult.box)) {
-			if (id2cnt[frameTrackingResult.id] < MAX_CNT * SCALAR) {
+			if (id2cnt[frameTrackingResult.id] < MAX_CNT.get() * SCALAR.get()) {
 				id2cnt[frameTrackingResult.id] += duration;
 			}
 			else {
-				id2cnt[frameTrackingResult.id] = MAX_CNT * SCALAR;
+				id2cnt[frameTrackingResult.id] = MAX_CNT.get() * SCALAR.get();
 			}
 		}
 		else{
@@ -49,11 +58,11 @@ void DrownAnalysis::update(const std::vector<TrackingBox>& frameTrackingResults,
 		}
 
 		// update signal
-		if (id2cnt[frameTrackingResult.id] > RED_CNT*SCALAR) {
+		if (id2cnt[frameTrackingResult.id] > RED_CNT.get()*SCALAR.get()) {
 			//std::cout << "RED" << std::endl;
 			id2signal[frameTrackingResult.id] = DrownSignal::RED;
 		}
-		else if (id2cnt[frameTrackingResult.id] > YELLOW_CNT*SCALAR) {
+		else if (id2cnt[frameTrackingResult.id] > YELLOW_CNT.get()*SCALAR.get()) {
 			//std::cout << "YELLOW" << std::endl;
 			id2signal[frameTrackingResult.id] = DrownSignal::YELLOW;
 		}
@@ -89,14 +98,14 @@ bool DrownAnalysis::checkEntryExtist(const int& id) {
 
 
 void DrownAnalysis::visualize(cv::Mat& img) {
-	cv::line(img, cv::Point(0, LEVEL*img.rows), cv::Point(img.cols, LEVEL*img.rows), cv::Scalar(201, 7, 22), 4);
+	cv::line(img, cv::Point(0, LEVEL.get()*img.rows), cv::Point(img.cols, LEVEL.get()*img.rows), cv::Scalar(201, 7, 22), 4);
 	for (const auto& id2box : id2boxes) {
 		cv::Scalar color = DrownAnalysis::convert_color(id2box.id);
-		float box_line = id2box.box.y + (1 - RATIO) * id2box.box.height;
+		float box_line = id2box.box.y + (1 - RATIO.get()) * id2box.box.height;
 		cv::line(img, cv::Point(id2box.box.x, box_line), cv::Point(id2box.box.x + id2box.box.width, box_line), cv::Scalar(0, 255, 255), 2);
 		cv::rectangle(img, id2box.box, color, 2);
 		cv::Point pt = cv::Point(id2box.box.x, id2box.box.y);
-		cv::putText(img, "id" + std::to_string(id2box.id) + ":" + std::to_string(id2cnt[id2box.id]/ SCALAR) + "s", pt, cv::FONT_HERSHEY_DUPLEX, 1, color, 2);
+		cv::putText(img, "id" + std::to_string(id2box.id) + ":" + std::to_string(id2cnt[id2box.id]/ SCALAR.get()) + "s", pt, cv::FONT_HERSHEY_DUPLEX, 1, color, 2);
 	}
 }
 

@@ -1,4 +1,5 @@
 #include "IOController.h"
+#include "ConsoleVariableSystem.h"
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -51,12 +52,21 @@ void IOController::serverListen(uint32_t newSocket)
     uint32_t valread = read(newSocket, buffer, 1024);
 
     // not ios message
-    if (valread > 1)
+    if (buffer[0] == '{')
     {
         serverMessage = buffer;
     }
 
-    if (buffer[0] == '1')
+    if (std::string(buffer) == "get_location")
+    {
+        send(newSocket, serverMessage.c_str(), serverMessage.length(), 0);
+        std::string serverMessage = "{}";
+    }
+    else if (std::string(buffer) == "stop_alarm")
+    {
+        // pass
+    }
+    else if (std::string(buffer) == "reset")
     {
         send(newSocket, serverMessage.c_str(), serverMessage.length(), 0);
         std::string serverMessage = "{}";

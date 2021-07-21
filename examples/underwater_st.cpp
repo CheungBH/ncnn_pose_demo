@@ -79,6 +79,8 @@ int main(int argc, char** argv)
 
     cv::VideoCapture cap;
 
+    cap.set(CV_CAP_PROP_FPS, 24);
+
     ncnn::Net yolov4;
 
     const char* devicepath;
@@ -120,6 +122,10 @@ int main(int argc, char** argv)
     }
     else
     {
+
+        // cap.open(devicepath);
+        // cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+        // cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
         cap = cv::VideoCapture("filesrc location=" + std::string(devicepath) + " ! qtdemux ! queue ! h265parse ! omxh265dec ! nvvidconv ! video/x-raw, width=(int)1280, height=(int)720, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink");
 
         if (!cap.isOpened())

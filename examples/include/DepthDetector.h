@@ -1,19 +1,6 @@
 #pragma once
-#define LINE1 1.0
-#define LINE2 0.71
-#define LINE3 0.57
-#define LINE4 0.50
-#define LINE5 0.47
 
-#define LINE1_X 4.07
-#define LINE2_X 6.23
-#define LINE3_X 9.32
-#define LINE4_X 12.41
-
-#define POOL_LENGTH_IN_METER 10.0
-#define POOL_WIDTH_IN_METER 16.0
 #include <opencv2/opencv.hpp>
-
 
 // swimming pool coordinates structure
 struct pool_coord {

@@ -1,20 +1,21 @@
 #include "DepthDetector.h"
+#include "ConsoleVariableSystem.h"
+
 #include <opencv2/opencv.hpp>
 
-//#define LINE1 1.0
-//#define LINE2 0.71
-//#define LINE3 0.57
-//#define LINE4 0.50
-//#define LINE5 0.47
-//
-//#define LINE1_X 4.07
-//#define LINE2_X 6.23
-//#define LINE3_X 9.32
-//#define LINE4_X 12.41
-//
-//#define POOL_LENGTH_IN_METER 10.0
-//#define POOL_WIDTH_IN_METER 16.0
+AutoFloat LINE1(1.0, "LINE1", "LINE1", ConsoleVariableFlag::NONE);
+AutoFloat LINE2(0.71, "LINE2", "LINE2", ConsoleVariableFlag::NONE);
+AutoFloat LINE3(0.57, "LINE3", "LINE3", ConsoleVariableFlag::NONE);
+AutoFloat LINE4(0.50, "LINE4", "LINE4", ConsoleVariableFlag::NONE);
+AutoFloat LINE5(0.47, "LINE5", "LINE5", ConsoleVariableFlag::NONE);
 
+AutoFloat LINE1_X(4.07, "LINE1_X", "LINE1_X", ConsoleVariableFlag::NONE);
+AutoFloat LINE2_X(6.23, "LINE2_X", "LINE2_X", ConsoleVariableFlag::NONE);
+AutoFloat LINE3_X(9.32, "LINE3_X", "LINE3_X", ConsoleVariableFlag::NONE);
+AutoFloat LINE4_X(12.41, "LINE4_X", "LINE4_X", ConsoleVariableFlag::NONE);
+
+AutoFloat POOL_LENGTH_IN_METER(10.0, "POOL_LENGTH_IN_METER", "POOL_LENGTH_IN_METER", ConsoleVariableFlag::NONE);
+AutoFloat POOL_WIDTH_IN_METER(16.0, "POOL_WIDTH_IN_METER", "POOL_WIDTH_IN_METER", ConsoleVariableFlag::NONE);
 
 b_box_coord normalize_bbox(const cv::Rect& rect, double col, double row)
 {
@@ -35,37 +36,37 @@ pool_coord return_drowning_normalized_xy(const b_box_coord& input) {
     pool_coord pool{ -1, -1 };
 
     // find y2 range
-    if (LINE2 < input.y2 && input.y2 <= LINE1) {
-        pool.y = 7.6 + (((input.y2 - LINE2) / (LINE1 - LINE2)) * 2.0);
+    if (LINE2.get() < input.y2 && input.y2 <= LINE1.get()) {
+        pool.y = 7.6 + (((input.y2 - LINE2.get()) / (LINE1.get() - LINE2.get())) * 2.0);
 
         //x: 3m
-        pool.x = (POOL_WIDTH_IN_METER - LINE1_X) / 2.0 + LINE1_X * (input.x1 + input.x2) / 2.0;
+        pool.x = (POOL_WIDTH_IN_METER.get() - LINE1_X.get()) / 2.0 + LINE1_X.get() * (input.x1 + input.x2) / 2.0;
     }
-    else if (LINE3 < input.y2 && input.y2 <= LINE2) {
-        pool.y = 6 + (((input.y2 - LINE3) / (LINE2 - LINE3)) * 2);
+    else if (LINE3.get() < input.y2 && input.y2 <= LINE2.get()) {
+        pool.y = 6 + (((input.y2 - LINE3.get()) / (LINE2.get() - LINE3.get())) * 2);
 
         // x: 5m
-        pool.x = (POOL_WIDTH_IN_METER - LINE2_X) / 2.0 + LINE2_X * (input.x1 + input.x2) / 2.0;
+        pool.x = (POOL_WIDTH_IN_METER.get() - LINE2_X.get()) / 2.0 + LINE2_X.get() * (input.x1 + input.x2) / 2.0;
     }
-    else if (LINE4 < input.y2 && input.y2 <= LINE3) {
-        pool.y = 4 + (((input.y2 - LINE4) / (LINE3 - LINE4)) * 2);
+    else if (LINE4.get() < input.y2 && input.y2 <= LINE3.get()) {
+        pool.y = 4 + (((input.y2 - LINE4.get()) / (LINE3.get() - LINE4.get())) * 2);
 
         // x: 7m
-        pool.x = (POOL_WIDTH_IN_METER - LINE3_X) / 2.0 + LINE3_X * (input.x1 + input.x2) / 2;
+        pool.x = (POOL_WIDTH_IN_METER.get() - LINE3_X.get()) / 2.0 + LINE3_X.get() * (input.x1 + input.x2) / 2;
     }
-    else if (LINE5 <= input.y2 && input.y2 <= LINE4) {
-        pool.y = 2 + (((input.y2 - LINE5) / (LINE4 - LINE5)) * 2);
+    else if (LINE5.get() <= input.y2 && input.y2 <= LINE4.get()) {
+        pool.y = 2 + (((input.y2 - LINE5.get()) / (LINE4.get() - LINE5.get())) * 2);
 
         // x: 9m
-        pool.x = (POOL_WIDTH_IN_METER - LINE4_X) / 2.0 + LINE4_X * (input.x1 + input.x2) / 2;
+        pool.x = (POOL_WIDTH_IN_METER.get() - LINE4_X.get()) / 2.0 + LINE4_X.get() * (input.x1 + input.x2) / 2;
     }
     else{
         //throw "Out of Range!";
     }
     // std::cout << "pool.x : " << pool.x << "pool.y : " << pool.y  << std::endl;
 
-    pool.x /= POOL_WIDTH_IN_METER;
-    pool.y /= POOL_LENGTH_IN_METER;
+    pool.x /= POOL_WIDTH_IN_METER.get();
+    pool.y /= POOL_LENGTH_IN_METER.get();
 
     // std::cout << "norm pool.x : " << pool.x << "norm pool.y : " << pool.y  << std::endl;
 
