@@ -22,7 +22,11 @@
 
 #include <algorithm>
 #include <opencv2/core/core.hpp>
-
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <iostream>
+#include <stdexcept>
 #include <chrono>
 
 
@@ -42,6 +46,7 @@
 #include "ConsoleVariableSystem.h"
 
 #include <stdio.h>
+#include <future>
 
 // #define NCNN_PROFILING
 #define YOLOV4_TINY //Using yolov4_tiny, if undef, using original yolov4
@@ -189,6 +194,57 @@ int main(int argc, char** argv)
     cv::Mat im_cnt;
     cv::Mat g_frame, s_frame, drown_frame; //for storing each frame and preprocessed frame;
 
+    auto sockerListenWorker = std::async(std::launch::async, [=]()
+    {
+        uint32_t serverFd = 0, newSocket, valRead;
+        struct sockaddr_in address;
+        uint32_t opt = 1;
+        uint32_t addrlen = sizeof(address);
+
+        // Creating socket file descriptor
+        serverFd = socket(AF_INET, SOCK_STREAM, 0);
+
+        if (serverFd == 0)
+        {
+            std::cerr << "Failed to create socket!" << std::endl;
+            return 1;
+        }
+
+        std::cout << "Created socket!" << std::endl;
+
+        // Forcefully attaching socket to the port 8080
+        if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+        {
+            std::cerr << "Failed to create socket!" << std::endl;
+            return 1;
+        }
+
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY;
+        address.sin_port = htons(IOController::clientPort);
+
+        if (bind(serverFd, (struct sockaddr *) &address, sizeof(address)) < 0)
+        {
+            std::cerr << "Socket bind error." << std::endl;
+            return 1;
+        }
+
+        std::cout << "Socket binded." << std::endl;
+
+        if (listen(serverFd , 8) < 0)
+        {
+            std::cerr << "Socket listen error." << std::endl;
+            return 1;
+        }
+
+        while (uint32_t newSocket = accept(serverFd, (struct sockaddr*) &address, (socklen_t*) &addrlen))
+        {
+            auto worker = std::async(std::launch::async, [=]()
+            {
+                IOController::clientListen(newSocket);
+            });
+        }
+    });
 
 //    List ls;
 
