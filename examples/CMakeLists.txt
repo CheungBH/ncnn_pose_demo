@@ -14,7 +14,9 @@ file(GLOB SOURCE_FILES
 	"*.cpp"
         "*.h")
 
-set(CMAKE_CXX_STANDARD 14)
+list(FILTER SOURCE_FILES EXCLUDE REGEX "Server.cpp") 
+
+set(CMAKE_CXX_STANDARD 17)
 #find_package(Torch REQUIRED)
 find_package(OpenCV 3 REQUIRED)
 #find_package(OpenCV 3.4.6 QUIET COMPONENTS opencv_world)
@@ -40,10 +42,15 @@ else()
     message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
     if(${OpenCV_VERSION_MAJOR} GREATER 3)
-        set(CMAKE_CXX_STANDARD 11)
+        set(CMAKE_CXX_STANDARD 17)
     endif()
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
     add_executable(underwater_st ${SOURCE_FILES})
     target_include_directories(underwater_st PRIVATE ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(underwater_st PRIVATE ncnn ${TORCH_LIBRARIES} ${OpenCV_LIBRARIES})
 endif()
+
+add_executable(server Server.cpp IOController.cpp ConsoleVariableSystem.cpp DepthDetector.cpp TimeLocBBox.cpp)
+target_link_libraries(server pthread ${OpenCV_LIBRARIES})
+target_include_directories(server PRIVATE ${OpenCV_INCLUDE_DIRS})
+

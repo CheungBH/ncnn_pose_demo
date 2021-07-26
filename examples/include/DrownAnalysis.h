@@ -5,14 +5,6 @@
 #include <time.h>
 using namespace std::chrono;
 
-#define YELLOW_CNT 5
-#define RED_CNT 8
-#define LEVEL 0.3
-#define RATIO 0.6
-#define MAX_CNT 15
-#define SCALAR 1000
-
-
 enum class DrownSignal {
 	RED,
 	YELLOW,
@@ -56,7 +48,7 @@ public:
 	void newEntry();
 	bool checkEntryExtist(const int& id);
 
-	cv::Mat visualize(cv::Mat img);
+	void visualize(cv::Mat& img);
 
 	cv::Scalar convert_color(int id);
 

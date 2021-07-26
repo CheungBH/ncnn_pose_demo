@@ -8,17 +8,14 @@
 #include <algorithm>
 #include <chrono>
 
-int YOLO_TENSOR_W = 416;
-int YOLO_TENSOR_H = 416;
-int YOLO_TENSOR_C = 3;
-int YOLO_TENSOR_N = 1;
-
-int SPPE_TENSOR_W  = 256;
-int SPPE_TENSOR_H = 320;
-int SPPE_TENSOR_C = 3;
-int SPPE_TENSOR_B = 1;
+#include "ConsoleVariableSystem.h"
 
 //yolo begin
+
+AutoInt YOLO_TENSOR_W(416, "YOLO_TENSOR_W", "YOLO_TENSOR_W", ConsoleVariableFlag::NONE);
+AutoInt YOLO_TENSOR_H(416, "YOLO_TENSOR_H", "YOLO_TENSOR_H", ConsoleVariableFlag::NONE);
+AutoInt YOLO_TENSOR_C(3, "YOLO_TENSOR_C", "YOLO_TENSOR_C", ConsoleVariableFlag::NONE);
+AutoInt YOLO_TENSOR_N(1, "YOLO_TENSOR_N", "YOLO_TENSOR_N", ConsoleVariableFlag::NONE);
 
 int boundary(int n, int lower, int upper)
 {
@@ -29,8 +26,9 @@ int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
 {
     /* --> Set the params you need for the ncnn inference <-- */
 
-    yolov4->opt.num_threads = 4; //You need to compile with libgomp for multi thread support
-
+    yolov4->opt.num_threads = 2; //You need to compile with libgomp for multi thread support
+    yolov4->opt.openmp_blocktime = 0;
+    
     yolov4->opt.use_vulkan_compute = true; //You need to compile with libvulkan for gpu support
 
     yolov4->opt.use_winograd_convolution = true;
@@ -51,8 +49,8 @@ int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
 #ifndef YOLOV4_TINY
 //    const char* yolov4_param = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.param";
 //    const char* yolov4_model = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.bin";
-    const char* yolov4_param = "ncnn.param";
-    const char* yolov4_model = "ncnn.bin";
+    const char* yolov4_param = "../../weights/yolo_rgb/ncnn.param";
+    const char* yolov4_model = "../../weights/yolo_rgb/ncnn.bin";
     *target_size = 416;
 #else
     const char* yolov4_param = "yolov4-opt.param";
@@ -75,15 +73,14 @@ int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
     return 0;
 }
 
-int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, ncnn::Net* yolov4)
+int yolov::detect_yolov4(cv::Mat bgr, std::vector<Object>& objects, int target_size, ncnn::Net* yolov4)
 {
 
-    auto start = std::chrono::steady_clock::now();
+    // auto start = std::chrono::steady_clock::now();
 
     int img_w = bgr.cols;
     int img_h = bgr.rows;
 
-    cv::Mat tmp = bgr.clone();
     double resize_ratio;
     cv::Scalar grey_value(128 , 128, 128);
     cv::Mat gray_img(target_size, target_size, CV_8UC3, grey_value);
@@ -111,9 +108,9 @@ int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int t
         padded_x = (0.5)*((double)416 - new_w);
         padded_y = 0;
     }
-    cv::resize(tmp, tmp, new_sz);
+    cv::resize(bgr, bgr, new_sz);
 
-    tmp.copyTo(gray_img(cv::Rect(padded_x, padded_y, new_w, new_h)));
+    bgr.copyTo(gray_img(cv::Rect(padded_x, padded_y, new_w, new_h)));
 //    cv::imshow("test", gray_img);
 
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(gray_img.data, ncnn::Mat::PIXEL_BGR2RGB, gray_img.cols, gray_img.rows, target_size, target_size);
@@ -122,12 +119,12 @@ int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int t
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in.substract_mean_normalize(mean_vals, norm_vals);
 
-    auto end = std::chrono::steady_clock::now();
+    // auto end = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "[Detector] yolo resize time: " << duration.count() << "s\n";
+    // std::chrono::duration<double> duration = end - start;
+    // std::cout << "[Detector] yolo resize time: " << duration.count() << "s\n";
 
-    start = std::chrono::steady_clock::now();
+    // start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = yolov4->create_extractor();
 
     ex.input("data", in);
@@ -135,10 +132,10 @@ int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int t
     ncnn::Mat out;
     ex.extract("output", out);
 
-    end = std::chrono::steady_clock::now();
+    // end = std::chrono::steady_clock::now();
 
-    duration = end - start;
-    std::cout << "[Detector] yolo inference time: " << duration.count() << "s\n";
+    // duration = end - start;
+    // std::cout << "[Detector] yolo inference time: " << duration.count() << "s\n";
 
     objects.clear();
     for (int i = 0; i < out.h; i++)
@@ -183,7 +180,7 @@ int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects
     double resized_w = resize_ratio * orig_w;
     double resized_h = resize_ratio * orig_h;
 
-    auto start = std::chrono::steady_clock::now();
+    // auto start = std::chrono::steady_clock::now();
 
 //    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, bgr.cols, bgr.rows, target_size, target_size);
     ncnn::Mat in = ncnn::Mat::from_pixels(bgr.data, ncnn::Mat::PIXEL_BGR2RGB, bgr.cols, bgr.rows);
@@ -191,12 +188,12 @@ int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in.substract_mean_normalize(mean_vals, norm_vals);
 
-    auto end = std::chrono::steady_clock::now();
+    // auto end = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "[Detector] yolo resize time: " << duration.count() << "s\n";
+    // std::chrono::duration<double> duration = end - start;
+    // std::cout << "[Detector] yolo resize time: " << duration.count() << "s\n";
 
-    start = std::chrono::steady_clock::now();
+    // start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = yolov4->create_extractor();
 
     ex.input("data", in);
@@ -204,20 +201,20 @@ int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects
     ncnn::Mat out;
     ex.extract("output", out);
 
-    end = std::chrono::steady_clock::now();
+    // end = std::chrono::steady_clock::now();
 
-    duration = end - start;
-    std::cout << "[Detector] yolo inference time: " << duration.count() << "s\n";
+    // duration = end - start;
+    // std::cout << "[Detector] yolo inference time: " << duration.count() << "s\n";
 
     objects.clear();
     for (int i = 0; i < out.h; i++)
     {
         const float* values = out.row(i);
 
-        double xmin = ( values[2]* img_w + (-(double)0.5*((double)YOLO_TENSOR_W - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
-        double ymin = ( values[3]* img_h + (-(double)0.5*((double)YOLO_TENSOR_H - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
-        double xmax = ( values[4]* img_w + (-(double)0.5*((double)YOLO_TENSOR_W - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
-        double ymax = ( values[5]* img_h + (-(double)0.5*((double)YOLO_TENSOR_H - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
+        double xmin = ( values[2]* img_w + (-(double)0.5*((double)YOLO_TENSOR_W.get() - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
+        double ymin = ( values[3]* img_h + (-(double)0.5*((double)YOLO_TENSOR_H.get() - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
+        double xmax = ( values[4]* img_w + (-(double)0.5*((double)YOLO_TENSOR_W.get() - (resize_ratio * orig_w) )) ) * ((double)orig_w / (double)resized_w);
+        double ymax = ( values[5]* img_h + (-(double)0.5*((double)YOLO_TENSOR_H.get() - (resize_ratio * orig_h) )) ) * ((double)orig_h / (double)resized_h);
 //        double width = xmax - xmin;
 //        double height = ymax - ymin;
 
@@ -243,7 +240,7 @@ int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects
     return 0;
 }
 
-cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
+void yolov::draw_objects(cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
 {
     static const char* class_names[] = {"background", "person", "bicycle",
                                         "car", "motorbike", "aeroplane", "bus", "train", "truck",
@@ -263,19 +260,17 @@ cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objec
                                         "teddy bear", "hair drier", "toothbrush"
     };
 
-    cv::Mat image = bgr.clone();
-
     for (size_t i = 0; i < objects.size(); i++)
     {
         const Object& obj = objects[i];
 
-        fprintf(stderr, "%d = %.5f at %.2f %.2f %.2f x %.2f\n", obj.label, obj.prob,
-                obj.rect.x, obj.rect.y, obj.rect.width, obj.rect.height);
+        // fprintf(stderr, "%d = %.5f at %.2f %.2f %.2f x %.2f\n", obj.label, obj.prob,
+        //         obj.rect.x, obj.rect.y, obj.rect.width, obj.rect.height);
 
-        cv::rectangle(image, obj.rect, cv::Scalar(255, 0, 0));
+        cv::rectangle(bgr, obj.rect, cv::Scalar(255, 0, 0));
 
         char text[256];
-        sprintf(text, "%s %.1f%%", class_names[obj.label], obj.prob * 100);
+        // sprintf(text, "%s %.1f%%", class_names[obj.label], obj.prob * 100);
 
         int baseLine = 0;
         cv::Size label_size = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
@@ -284,15 +279,13 @@ cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objec
         int y = obj.rect.y - label_size.height - baseLine;
         if (y < 0)
             y = 0;
-        if (x + label_size.width > image.cols)
-            x = image.cols - label_size.width;
+        if (x + label_size.width > bgr.cols)
+            x = bgr.cols - label_size.width;
 
-        cv::rectangle(image, cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
+        cv::rectangle(bgr, cv::Rect(cv::Point(x, y), cv::Size(label_size.width, label_size.height + baseLine)),
                       cv::Scalar(255, 255, 255), -1);
 
-        cv::putText(image, text, cv::Point(x, y + label_size.height),
+        cv::putText(bgr, text, cv::Point(x, y + label_size.height),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
     }
-
-    return image;
 }

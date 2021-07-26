@@ -235,7 +235,7 @@ std::vector<int> RegionProcessor::region_range(cv::Rect box) {
 	return region_location;
 }
 
-std::vector<int> RegionProcessor::get_alarming_id(std::vector<TrackingBox> tracked_boxes) {
+std::vector<int> RegionProcessor::get_alarming_id(const std::vector<TrackingBox>& tracked_boxes) {
 	std::vector<int> warnings;
 	std::vector<std::pair<double, double>> alarm_cases = RegionProcessor::trigger_alarm();
 	for (auto &tracked_box : tracked_boxes) {

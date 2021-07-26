@@ -22,7 +22,11 @@
 
 #include <algorithm>
 #include <opencv2/core/core.hpp>
-
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <iostream>
+#include <stdexcept>
 #include <chrono>
 
 
@@ -34,50 +38,53 @@
 //#include "RegionProcessor.h"
 #include "DrownAnalysis.h"
 #include "Img_tns.h"
+#include "IOController.h"
+
+#include "TimeLocBbox.h"
+#include "DepthDetector.h"
+
+#include "ConsoleVariableSystem.h"
 
 #include <stdio.h>
+#include <future>
 
-#define NCNN_PROFILING
+// #define NCNN_PROFILING
 #define YOLOV4_TINY //Using yolov4_tiny, if undef, using original yolov4
 
 #ifdef NCNN_PROFILING
 #include "benchmark.h"
 #endif
 
-#define SPPE_PARAM "pose_models/alphapose.param"
-#define SPPE_MODEL "pose_models/alphapose.bin"
-
-#define CNN_PARAM "CNN_models/resnet18.param"
-#define CNN_MODEL "CNN_models/resnet18.bin"
+//#define SPPE_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.param"
+//#define SPPE_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.bin"
+//
+//#define CNN_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.param"
+//#define CNN_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.bin"
 
 //#define YOLO_TENSOR_W 416
 //#define YOLO_TENSOR_H 416
 //#define YOLO_TENSOR_C 3
 //#define YOLO_TENSOR_N 1
 
-extern int YOLO_TENSOR_W , YOLO_TENSOR_H, YOLO_TENSOR_C, YOLO_TENSOR_N;
-extern int SPPE_TENSOR_W , SPPE_TENSOR_H, SPPE_TENSOR_C, SPPE_TENSOR_N;
-
 using namespace yolov;
 using namespace sppeNet;
 using namespace cnnNet;
-
-int sz_boxes = 10;
-int sz_skeletons = 30;
-int sz_cnt = 10;
-int sz_predictions = 5;
 
 #define SCREEN_W 960
 #define SCREEN_H 540
 
 int main(int argc, char** argv)
 {
-    double program_begin = ncnn::get_current_time();
+    std::vector<time_loc_bbox> tlb_list;
+
+    // double program_begin = ncnn::get_current_time();
 
     cv::Mat frame;
     std::vector<Object> objects;
 
     cv::VideoCapture cap;
+
+    cap.set(CV_CAP_PROP_FPS, 24);
 
     ncnn::Net yolov4;
 
@@ -120,7 +127,11 @@ int main(int argc, char** argv)
     }
     else
     {
-        cap.open(devicepath);
+
+        // cap.open(devicepath);
+        // cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+        // cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+        cap = cv::VideoCapture("filesrc location=" + std::string(devicepath) + " ! qtdemux ! queue ! h265parse ! omxh265dec ! nvvidconv ! video/x-raw, width=(int)1280, height=(int)720, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink");
 
         if (!cap.isOpened())
         {
@@ -148,29 +159,29 @@ int main(int argc, char** argv)
     bool write = false;
 
     // init cnnNet
-    static ncnn::Net cnnNet;
-    static bool is_loaded_cnn = false;
-    if(!is_loaded_cnn)
-    {
-        cnnNet.opt.use_vulkan_compute = 1;
-
-        cnnNet.load_param(CNN_PARAM);
-        cnnNet.load_model(CNN_MODEL);
-        is_loaded_cnn = true;
-    }
-
-    // init sppe
-    static ncnn::Net sppeNet;
-    static bool is_loaded_sppe = false;
-
-    if(!is_loaded_sppe)
-    {
-        sppeNet.opt.use_vulkan_compute = 1;
-
-        sppeNet.load_param(SPPE_PARAM);
-        sppeNet.load_model(SPPE_MODEL);
-        is_loaded_sppe = true;
-    }
+//    static ncnn::Net cnnNet;
+//    static bool is_loaded_cnn = false;
+//    if(!is_loaded_cnn)
+//    {
+//        cnnNet.opt.use_vulkan_compute = 1;
+//
+//        cnnNet.load_param(CNN_PARAM);
+//        cnnNet.load_model(CNN_MODEL);
+//        is_loaded_cnn = true;
+//    }
+//
+//    // init sppe
+//    static ncnn::Net sppeNet;
+//    static bool is_loaded_sppe = false;
+//
+//    if(!is_loaded_sppe)
+//    {
+//        sppeNet.opt.use_vulkan_compute = 1;
+//
+//        sppeNet.load_param(SPPE_PARAM);
+//        sppeNet.load_model(SPPE_MODEL);
+//        is_loaded_sppe = true;
+//    }
 
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, write};
@@ -183,6 +194,57 @@ int main(int argc, char** argv)
     cv::Mat im_cnt;
     cv::Mat g_frame, s_frame, drown_frame; //for storing each frame and preprocessed frame;
 
+    auto sockerListenWorker = std::async(std::launch::async, [=]()
+    {
+        uint32_t serverFd = 0, newSocket, valRead;
+        struct sockaddr_in address;
+        uint32_t opt = 1;
+        uint32_t addrlen = sizeof(address);
+
+        // Creating socket file descriptor
+        serverFd = socket(AF_INET, SOCK_STREAM, 0);
+
+        if (serverFd == 0)
+        {
+            std::cerr << "Failed to create socket!" << std::endl;
+            return 1;
+        }
+
+        std::cout << "Created socket!" << std::endl;
+
+        // Forcefully attaching socket to the port 8080
+        if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+        {
+            std::cerr << "Failed to create socket!" << std::endl;
+            return 1;
+        }
+
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY;
+        address.sin_port = htons(IOController::clientPort);
+
+        if (bind(serverFd, (struct sockaddr *) &address, sizeof(address)) < 0)
+        {
+            std::cerr << "Socket bind error." << std::endl;
+            return 1;
+        }
+
+        std::cout << "Socket binded." << std::endl;
+
+        if (listen(serverFd , 8) < 0)
+        {
+            std::cerr << "Socket listen error." << std::endl;
+            return 1;
+        }
+
+        while (uint32_t newSocket = accept(serverFd, (struct sockaddr*) &address, (socklen_t*) &addrlen))
+        {
+            auto worker = std::async(std::launch::async, [=]()
+            {
+                IOController::clientListen(newSocket);
+            });
+        }
+    });
 
 //    List ls;
 
@@ -195,14 +257,13 @@ int main(int argc, char** argv)
 #endif
 
             cap >> frame;
-            s_frame = frame.clone();
-            drown_frame = frame.clone();
-            im_cnt = im_raw.clone();
+            // s_frame = frame.clone();
+            // drown_frame = frame.clone();
+            // im_cnt = im_raw.clone();
 
 #ifdef NCNN_PROFILING
             double t_capture_end = ncnn::get_current_time();
             fprintf(stdout, "NCNN OpenCV capture time %.02lfms\n", t_capture_end - t_capture_start);
-#endif
             if (frame.empty())
             {
                 double program_end = ncnn::get_current_time();
@@ -210,6 +271,7 @@ int main(int argc, char** argv)
                 fprintf(stderr, "OpenCV Failed to Capture from device %s\n", devicepath);
                 return -1;
             }
+#endif
         }
 
 
@@ -217,71 +279,115 @@ int main(int argc, char** argv)
 
         std::vector<cv::Rect> b_boxes;
 
-        draw_objects(frame, objects, is_streaming); //Draw detection results on opencv image
+        // draw_objects(frame, objects, is_streaming); //Draw detection results on opencv image
 
-        for (const auto& object : objects) {
+        for (const auto& object : objects)
+        {
             b_boxes.push_back(object.rect);
         }
 
-        auto start_rp = std::chrono::steady_clock::now();
+        // auto start_rp = std::chrono::steady_clock::now();
         std::vector<std::vector<std::pair<double, double>>> RP_res = RP.get_condition(b_boxes);
         RP.update_region(RP_res);
 //        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
-        std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
-        std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
+        // std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
+        // std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
 
-        auto start_sort = std::chrono::steady_clock::now();
+        // auto start_sort = std::chrono::steady_clock::now();
 //		std::vector<std::vector<float>> untracked_boxes = utils_main.Rect2vf(b_boxes);
         std::vector<TrackingBox> frameTrackingResult = SORT(b_boxes);
-        vis_id(frameTrackingResult, s_frame);
-        auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
-        std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
+        // vis_id(frameTrackingResult, s_frame);
+        // auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
+        // std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
         std::vector<int> alarm_idx = RP.get_alarming_id(frameTrackingResult);
 
-        auto drown_start =  std::chrono::steady_clock::now();
-        analysis.update(frameTrackingResult, drown_frame.rows);
+        // auto drown_start =  std::chrono::steady_clock::now();
+        analysis.update(frameTrackingResult, frame.rows);
         // analysis.print();
-        drown_frame = analysis.visualize(drown_frame);
+        analysis.visualize(frame);
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
-        auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
-        std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
+        // auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
+        // std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
 
-        skeletons.clear();
-        predictions.clear();
-
-        auto crop_start = std::chrono::steady_clock::now();
-        std::cout << frame.size << std::endl;
-//        cropImageFrom(imgs, frame, objects);
-        cropImageOriginal(imgs, frame, objects);
-        auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
-        std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
-
-
-//        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
-//        cv::Mat padded_temp = sppe_padded_img.clone();
-//        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
-
-
-        int i = 0;
-
-        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
+        if (b_boxes.size() > 0)
         {
-            double area = itr->size[0]*itr->size[1];
-            if(area > 10)
-            {
-                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
-//                skeletons.push_back(sppeOne(*itr, sppeNet));
-                predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
-                // print_topk(predictions[itr-imgs.begin()], 2);
-                i++;
+            for (auto const& drown_box : drown_boxes)
+            {   
+                int cam_id = 1;
+                //Handle Normalized b_box_coord type variable for Depth Detector
+                b_box_coord b_box_normalized  = normalize_bbox(drown_box, frame.cols, frame.rows);
+                pool_coord pc = return_drowning_normalized_xy(b_box_normalized);
+                std::string datetime = currentDateTime();
+                time_loc_bbox tlb{cam_id, return_area_id(pc), datetime, pc, b_box_normalized};
+                // std::cout << "tlbToString(tlb): " << tlbToString(tlb) << "  Time:" << std::stol(datetime) << std::endl;
+
+                tlb_list.push_back(tlb);
+                
+                if (tlb_list.size() > 100)
+                {
+                    tlb_list.clear();
+                }
             }
+            // std::cout << "" << std::endl;
         }
 
-        cv::imshow("img_cnt", im_cnt);
-        cv::imshow("pose", drown_frame);
-        cv::waitKey(1);
+        std::stringstream tlb_string;
 
+        if (tlb_list.size() != 0)
+        {
+            for (const auto& tlb : tlb_list)
+            {
+                tlb_string << tlbToString(tlb);
+            }
+            // std::cout << "tlb_string: " << tlb_string.str() << std::endl;
+
+            try
+            {
+                IOController::clientSend(tlb_string.str());
+            }
+            catch (const std::runtime_error& e)
+            {
+                std::cerr << e.what() << std::endl;
+            }
+
+            tlb_list.clear();
+        }
+
+//        skeletons.clear();
+//        predictions.clear();
+//
+//        auto crop_start = std::chrono::steady_clock::now();
+//        std::cout << frame.size << std::endl;
+////        cropImageFrom(imgs, frame, objects);
+//        cropImageOriginal(imgs, frame, objects);
+//        auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
+//        std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
+//
+//
+////        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
+////        cv::Mat padded_temp = sppe_padded_img.clone();
+////        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
+//
+//
+//        int i = 0;
+//
+//        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
+//        {
+//            double area = itr->size[0]*itr->size[1];
+//            if(area > 10)
+//            {
+//                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
+////                skeletons.push_back(sppeOne(*itr, sppeNet));
+//                predictions.push_back(cnn(*itr, cnnNet));
+//                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
+//                // print_topk(predictions[itr-imgs.begin()], 2);
+//                i++;
+//            }
+//        }
+//
+       // cv::imshow("img_cnt", im_cnt);
+        cv::imshow("pose", frame);
+        cv::waitKey(1);
 
         if (!is_streaming)
         {   //If it is a still image, exit!

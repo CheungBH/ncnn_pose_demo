@@ -46,6 +46,6 @@ public:
 
 	void update_region(std::vector<std::vector<std::pair<double, double>>> region_ls);
 	RegionProcessor(double w, double h, double w_num, double h_num, bool write);
-	std::vector<int> get_alarming_id(std::vector<TrackingBox> tracked_boxes);
+	std::vector<int> get_alarming_id(const std::vector<TrackingBox>& tracked_boxes);
 	std::vector<int> region_range(cv::Rect box);
 };
