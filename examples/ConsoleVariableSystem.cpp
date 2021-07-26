@@ -76,6 +76,14 @@ struct ConsoleVariableArray
 
         return index;
     }
+
+    void reset()
+    {
+        for (uint32_t index = 0; index < arraySize; index++)
+        {
+            variables[index].current = variables[index].initial;
+        }
+    }
 };
 
 class ConsoleVariableSystemImplementation : public ConsoleVariableSystem
@@ -117,6 +125,7 @@ public:
 		}
 	}
 
+    void reset() override final;
     ConsoleVariableParameter* getVariableParameter(StringUtils::StringHash hash) override final;
     int* getIntVariableCurrentByHash(StringUtils::StringHash hash) override final;
     float* getFloatVariableCurrentByHash(StringUtils::StringHash hash) override final;
@@ -156,6 +165,13 @@ template<>
 ConsoleVariableArray<std::string>* ConsoleVariableSystemImplementation::getVariableArray()
 {
     return &stringArray;
+}
+
+void ConsoleVariableSystemImplementation::reset()
+{
+    intArray.reset();
+    floatArray.reset();
+    stringArray.reset();
 }
 
 ConsoleVariableParameter* ConsoleVariableSystemImplementation::initVariable(const char* name, const char* description)

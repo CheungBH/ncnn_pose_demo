@@ -21,32 +21,22 @@ void IOController::clientListen(uint32_t newSocket)
 
     std::string message { buffer };
 
-    // not ios message
-    if (message[0] == '{')
-    {
-        // serverMessage = buffer;
-    }
-
-    if (message == "get_location")
-    {
-        // send(newSocket, serverMessage.c_str(), serverMessage.length(), 0);
-        // std::string serverMessage = "{}";
-    }
-
-    else if (message == "stop_alarm")
+    if (message == "stop_alarm")
     {
         // pass
     }
 
     else if (message == "reset")
     {
-        // pass
+        ConsoleVariableSystem::get()->reset();
     }
 
     else if (auto pos = message.find(' '))
     {
-        // std::string key = message.substr(0, pos);
-        // std::string value = message.substr(pos, valread);
+        std::string key = message.substr(0, pos);
+        std::string value = message.substr(pos, valread);
+
+        ConsoleVariableSystem::get()->setFloatVariableCurrentByHash(key, value);
     }
 
     close(newSocket);
