@@ -14,7 +14,7 @@ public:
     
     static ConsoleVariableSystem* get();
 
-    virtual void reset();
+    virtual void reset() = 0;
     virtual ConsoleVariableParameter* getVariableParameter(StringUtils::StringHash hash) = 0;
     virtual int* getIntVariableCurrentByHash(StringUtils::StringHash hash) = 0;
     virtual float* getFloatVariableCurrentByHash(StringUtils::StringHash hash) = 0;

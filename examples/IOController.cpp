@@ -36,7 +36,7 @@ void IOController::clientListen(uint32_t newSocket)
         std::string key = message.substr(0, pos);
         std::string value = message.substr(pos, valread);
 
-        ConsoleVariableSystem::get()->setFloatVariableCurrentByHash(key, value);
+        // ConsoleVariableSystem::get()->setFloatVariableCurrentByHash(key, value);
     }
 
     close(newSocket);
