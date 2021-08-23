@@ -182,21 +182,61 @@ void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& fil
 {
 	std::ifstream cfgFile(filepath);
 
-	while(std::getline(cfgFile, line))
+	while (std::getline(cfgFile, line))
 	{
-		std::istringstream insstream(line);
+		std::istringstream lineStream(line);
 
 		std::string key;
 		std::string value;
 
-		if (!(insstream >> key >> value)) { continue; }
+		if (!(lineStream >> key >> value)) { continue; }
 
+		if (key[0] == '/' && key[1] == '/')
+		{
+			continue;
+		}
+
+		std::cout << "key: " << key << " value: " << value << std::endl;
+		
 		if (value[0] == '"' && value.back() == '"')
 		{
 			value = value.substr(1, value.size() - 2);
 		}
 
-		std::cout << "key: " << key << " value: " << value << std::endl;
+		// check array
+		if (value.find('[') != std::string::npos)
+		{
+			continue;
+		}
+
+		else
+		{
+			// check int
+			std::string::const_iterator it = value.begin();
+			while (it != value.end() && std::isdigit(*it)) it++;
+
+			if (!value.empty() && it == value.end())
+			{
+				int val = std::stoi(value);
+				createIntVariable(val, val, key, key);
+				continue;
+			}
+
+			// check float
+			std::istringStream valueStream(value);
+			float val;
+			valueStream >> std::noskipws >> val;
+
+			if (valueStream.eof() && !valueStream.fail())
+			{
+				float val = std::stof(value);
+				createFloatVariable(val, val, key, key);
+				continue;
+			}
+		}
+
+		// string
+		createStringVariable(val, val, key, key);
 	}
 }
 
