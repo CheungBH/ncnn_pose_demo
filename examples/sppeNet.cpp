@@ -3,11 +3,10 @@
 //
 #include "sppeNet.h"
 #include "Img_tns.h"
+#include "ConsoleVariableSystem.h"
 
 #include <algorithm>
 #include <chrono>
-
-extern int SPPE_TENSOR_H, SPPE_TENSOR_W;
 
 void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
 {
@@ -24,7 +23,16 @@ void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src
 
 std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const Object& obj) {
 
+    const char* sppeInput = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeInput");
+    const char* sppeOutput = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeOutput");
+
+    int SPPE_TENSOR_W  = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeWidth");
+    int SPPE_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeHeight");
+    int SPPE_TENSOR_C = 3;
+    int SPPE_TENSOR_B = 1;
+    
     std::vector<KP> target;
+
     cv::Mat img_tmp = src.clone();
     cv::Scalar grey_value(128, 128, 128);
     cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
@@ -76,10 +84,10 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
 
     ncnn::Extractor ex = sppeNet.create_extractor();
 
-    ex.input("input.1", in);
+    ex.input(sppeInput, in);
 
     ncnn::Mat out;
-    ex.extract("342", out);
+    ex.extract(sppeOutput, out);
 
     int out_w = out.w, out_h = out.h;
 
@@ -123,6 +131,11 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
 //sPPE begin
 void sppeNet::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const std::vector<Object> &obj)
 {
+    int SPPE_TENSOR_W  = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeWidth");
+    int SPPE_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeHeight");
+    int SPPE_TENSOR_C = 3;
+    int SPPE_TENSOR_B = 1;
+
     target.clear();
 //    printf("Crop Image...\n");
 
@@ -145,6 +158,11 @@ void sppeNet::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const st
 
 std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
 {
+    int SPPE_TENSOR_W  = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeWidth");
+    int SPPE_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeHeight");
+    int SPPE_TENSOR_C = 3;
+    int SPPE_TENSOR_B = 1;
+
     std::vector<KP> target;
 
     int w = src.cols, h = src.rows;
@@ -279,13 +297,16 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
             {1, 2}, {1, 3}, {3, 5}, {2, 4}, {4, 6}, {1, 7}, {2, 8}, {7, 9}, {9, 11}, {8, 10}, {10, 12}, {7, 8}
     };
 
-    for (int i = 0; i < 12; i++)
+    int sppeKps = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeKps");
+    float sppeThresh = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeThresh");
+
+    for (int i = 0; i < sppeKps; i++)
     {
         KP p1 = keypoints[joint_pairs[i][0]];
         KP p2 = keypoints[joint_pairs[i][1]];
 
 
-        if (p1.prob < 0.04f || p2.prob < 0.04f)
+        if (p1.prob < sppeThresh || p2.prob < sppeThresh)
             continue;
         cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
     }

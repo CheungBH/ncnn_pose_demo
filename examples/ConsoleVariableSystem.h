@@ -17,8 +17,8 @@ public:
     virtual void readFromCfgFile(const std::string& filepath) = 0;
     virtual void reset() = 0;
     virtual ConsoleVariableParameter* getVariableParameter(StringUtils::StringHash hash) = 0;
-    virtual int* getIntVariableCurrentByHash(StringUtils::StringHash hash) = 0;
-    virtual float* getFloatVariableCurrentByHash(StringUtils::StringHash hash) = 0;
+    virtual int getIntVariableCurrentByHash(StringUtils::StringHash hash) = 0;
+    virtual float getFloatVariableCurrentByHash(StringUtils::StringHash hash) = 0;
     virtual const char* getStringVariableCurrentByHash(StringUtils::StringHash hash) = 0;
     virtual void setIntVariableCurrentByHash(StringUtils::StringHash hash, int newValue) = 0;
     virtual void setFloatVariableCurrentByHash(StringUtils::StringHash hash, float newValue) = 0;

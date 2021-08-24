@@ -4,19 +4,10 @@
 #include "yolov.h"
 //#include "Hungarian.h"
 #include "utils.h"
+#include "ConsoleVariableSystem.h"
 
 #include <algorithm>
 #include <chrono>
-
-int YOLO_TENSOR_W = 416;
-int YOLO_TENSOR_H = 416;
-int YOLO_TENSOR_C = 3;
-int YOLO_TENSOR_N = 1;
-
-int SPPE_TENSOR_W  = 256;
-int SPPE_TENSOR_H = 256;
-int SPPE_TENSOR_C = 3;
-int SPPE_TENSOR_B = 1;
 
 //yolo begin
 
@@ -51,8 +42,8 @@ int yolov::init_yolov4(ncnn::Net* yolov4, int* target_size)
 #ifndef YOLOV4_TINY
 //    const char* yolov4_param = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.param";
 //    const char* yolov4_model = "/home/sean/Desktop/ncnn/build/auto_examples/model_yolo/5_ALL-prune_0.95_keep_0.1_10_shortcut/ncnn_opt-fp16.bin";
-    const char* yolov4_param = "/home/hkuit155/Desktop/ncnn_pose_demo/weights/yolo_rgb/ncnn.param";
-    const char* yolov4_model = "/home/hkuit155/Desktop/ncnn_pose_demo/weights/yolo_rgb/ncnn.bin";
+    const char* yolov4_param = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("yoloParam");
+    const char* yolov4_model = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("yoloModel");
     *target_size = 416;
 #else
     const char* yolov4_param = "yolov4-opt.param";
@@ -176,6 +167,11 @@ int yolov::detect_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int t
 
 int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, double resize_ratio, double orig_w, double orig_h, ncnn::Net* yolov4)
 {
+    int YOLO_TENSOR_W = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("yoloWidth");
+    int YOLO_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("yoloHeight");
+    int YOLO_TENSOR_C = 3;
+    int YOLO_TENSOR_N = 1;
+
     int img_w = bgr.cols;
     int img_h = bgr.rows;
 //    double orig_w = orig_w;

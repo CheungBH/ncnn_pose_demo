@@ -3,6 +3,7 @@
 //
 
 #include "cnnNet.h"
+#include "ConsoleVariableSystem.h"
 
 #include <iostream>
 #include <algorithm>
@@ -15,7 +16,13 @@ std::vector<float> cnnNet::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
 
     auto start = std::chrono::steady_clock::now();
 
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(src.data, ncnn::Mat::PIXEL_BGR, src.cols, src.rows, 224, 224);
+    const char* cnnInput = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnInput");
+    const char* cnnOutput = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnOutput");
+
+    int cnnWidth = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("cnnWidth");
+    int cnnHeight = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("cnnHeight");
+
+    ncnn::Mat in = ncnn::Mat::from_pixels_resize(src.data, ncnn::Mat::PIXEL_BGR, src.cols, src.rows, cnnWidth, cnnHeight);
 
     const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
     in.substract_mean_normalize(0, norm_vals);
@@ -28,10 +35,10 @@ std::vector<float> cnnNet::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
     start = std::chrono::steady_clock::now();
     ncnn::Extractor ex = cnnNet.create_extractor();
 
-    ex.input("input.1", in);
+    ex.input(cnnInput, in);
 
     ncnn::Mat out;
-    ex.extract("191", out);
+    ex.extract(cnnOutput, out);
 
     end = std::chrono::steady_clock::now();
 

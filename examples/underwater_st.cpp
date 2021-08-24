@@ -19,6 +19,7 @@
 #include "RegionProcessor.h"
 #include "Hungarian.h"
 #include "utils.h"
+#include "ConsoleVariableSystem.h"
 
 #include <algorithm>
 #include <opencv2/core/core.hpp>
@@ -44,12 +45,6 @@
 #include "benchmark.h"
 #endif
 
-#define SPPE_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.param"
-#define SPPE_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/weights/seresnet18/ncnn_opt-fp16.bin"
-
-#define CNN_PARAM "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.param"
-#define CNN_MODEL "/home/hkuit155/Desktop/ncnn_pose_demo/build/examples/CNN_models/resnet18.bin"
-
 //#define YOLO_TENSOR_W 416
 //#define YOLO_TENSOR_H 416
 //#define YOLO_TENSOR_C 3
@@ -72,6 +67,14 @@ int sz_predictions = 5;
 
 int main(int argc, char** argv)
 {
+
+    ConsoleVariableSystem::get()->readFromCfgFile("../../user.cfg");
+
+    const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnParam");
+    const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnModel");
+    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
+    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
+
     double program_begin = ncnn::get_current_time();
 
     cv::Mat frame;
@@ -154,8 +157,8 @@ int main(int argc, char** argv)
     {
         cnnNet.opt.use_vulkan_compute = 1;
 
-        cnnNet.load_param(CNN_PARAM);
-        cnnNet.load_model(CNN_MODEL);
+        cnnNet.load_param(cnnParam);
+        cnnNet.load_model(cnnModel);
         is_loaded_cnn = true;
     }
 
@@ -167,8 +170,8 @@ int main(int argc, char** argv)
     {
         sppeNet.opt.use_vulkan_compute = 1;
 
-        sppeNet.load_param(SPPE_PARAM);
-        sppeNet.load_model(SPPE_MODEL);
+        sppeNet.load_param(sppeParam);
+        sppeNet.load_model(sppeModel);
         is_loaded_sppe = true;
     }
 

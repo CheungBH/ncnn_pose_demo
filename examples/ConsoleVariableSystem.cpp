@@ -3,8 +3,8 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
-#include <ifstream>
-#include <iostream>
+#include <fstream>
+// #include <iostream>
 
 enum class ConsoleVariableType : char
 {
@@ -131,8 +131,8 @@ public:
     void reset() override final;
     void readFromCfgFile(const std::string& filepath) override final;
     ConsoleVariableParameter* getVariableParameter(StringUtils::StringHash hash) override final;
-    int* getIntVariableCurrentByHash(StringUtils::StringHash hash) override final;
-    float* getFloatVariableCurrentByHash(StringUtils::StringHash hash) override final;
+    int getIntVariableCurrentByHash(StringUtils::StringHash hash) override final;
+    float getFloatVariableCurrentByHash(StringUtils::StringHash hash) override final;
     const char* getStringVariableCurrentByHash(StringUtils::StringHash hash) override final;
     void setIntVariableCurrentByHash(StringUtils::StringHash hash, int newValue) override final;
     void setFloatVariableCurrentByHash(StringUtils::StringHash hash, float newValue) override final;
@@ -181,6 +181,7 @@ void ConsoleVariableSystemImplementation::reset()
 void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& filepath)
 {
 	std::ifstream cfgFile(filepath);
+	std::string line;
 
 	while (std::getline(cfgFile, line))
 	{
@@ -196,15 +197,20 @@ void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& fil
 			continue;
 		}
 
-		std::cout << "key: " << key << " value: " << value << std::endl;
+		// std::cout << "key: " << key << " value: " << value << std::endl;
 		
 		if (value[0] == '"' && value.back() == '"')
 		{
 			value = value.substr(1, value.size() - 2);
+
+			// string
+			createStringVariable(value.c_str(), value.c_str(), key.c_str(), key.c_str());
+
+			continue;
 		}
 
 		// check array
-		if (value.find('[') != std::string::npos)
+		else if (value.find('[') != std::string::npos)
 		{
 			continue;
 		}
@@ -218,25 +224,21 @@ void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& fil
 			if (!value.empty() && it == value.end())
 			{
 				int val = std::stoi(value);
-				createIntVariable(val, val, key, key);
+				createIntVariable(val, val, key.c_str(), key.c_str());
 				continue;
 			}
 
 			// check float
-			std::istringStream valueStream(value);
+			std::istringstream valueStream(value);
 			float val;
 			valueStream >> std::noskipws >> val;
 
 			if (valueStream.eof() && !valueStream.fail())
 			{
 				float val = std::stof(value);
-				createFloatVariable(val, val, key, key);
-				continue;
+				createFloatVariable(val, val, key.c_str(), key.c_str());
 			}
 		}
-
-		// string
-		createStringVariable(val, val, key, key);
 	}
 }
 
@@ -267,14 +269,14 @@ ConsoleVariableParameter* ConsoleVariableSystemImplementation::getVariableParame
 	return nullptr;
 }
 
-int* ConsoleVariableSystemImplementation::getIntVariableCurrentByHash(StringUtils::StringHash hash)
+int ConsoleVariableSystemImplementation::getIntVariableCurrentByHash(StringUtils::StringHash hash)
 {
-    return getVariableCurrentByHash<int>(hash);
+    return *getVariableCurrentByHash<int>(hash);
 }
 
-float* ConsoleVariableSystemImplementation::getFloatVariableCurrentByHash(StringUtils::StringHash hash)
+float ConsoleVariableSystemImplementation::getFloatVariableCurrentByHash(StringUtils::StringHash hash)
 {
-    return getVariableCurrentByHash<float>(hash);
+    return *getVariableCurrentByHash<float>(hash);
 }
 
 const char* ConsoleVariableSystemImplementation::getStringVariableCurrentByHash(StringUtils::StringHash hash)
