@@ -4,7 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <fstream>
-// #include <iostream>
+#include <iostream>
 
 enum class ConsoleVariableType : char
 {
@@ -197,21 +197,15 @@ void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& fil
 			continue;
 		}
 
-		// std::cout << "key: " << key << " value: " << value << std::endl;
+		const char* keyChar = key.c_str();
 		
 		if (value[0] == '"' && value.back() == '"')
 		{
 			value = value.substr(1, value.size() - 2);
 
 			// string
-			createStringVariable(value.c_str(), value.c_str(), key.c_str(), key.c_str());
+			createStringVariable(value.c_str(), value.c_str(), keyChar, keyChar);
 
-			continue;
-		}
-
-		// check array
-		else if (value.find('[') != std::string::npos)
-		{
 			continue;
 		}
 
@@ -224,7 +218,7 @@ void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& fil
 			if (!value.empty() && it == value.end())
 			{
 				int val = std::stoi(value);
-				createIntVariable(val, val, key.c_str(), key.c_str());
+				createIntVariable(val, val, keyChar, keyChar);
 				continue;
 			}
 
@@ -236,7 +230,7 @@ void ConsoleVariableSystemImplementation::readFromCfgFile(const std::string& fil
 			if (valueStream.eof() && !valueStream.fail())
 			{
 				float val = std::stof(value);
-				createFloatVariable(val, val, key.c_str(), key.c_str());
+				createFloatVariable(val, val, keyChar, keyChar);
 			}
 		}
 	}

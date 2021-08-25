@@ -76,10 +76,21 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(sppe_padded_img.data, ncnn::Mat::PIXEL_BGR2RGB, SPPE_TENSOR_W,
                                                  SPPE_TENSOR_H, SPPE_TENSOR_W, SPPE_TENSOR_H);
 
-    const float mean_vals[3] = {0.485f*255.f, 0.456f*255.f, 0.406f*255.f};
-    const float norm_vals[3] = {1/0.229f/255.f, 1/0.224f/255.f, 1/0.225f/255.f};
-//    const float mean_vals[3] = {0.406f*255.f, 0.456f*255.f, 0.485f*255.f};
-//    const float norm_vals[3] = {1 / 255.f/0.225f, 1 / 255.f/0.224f, 1 / 255.f/0.229f};
+    float sppeMean0 = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeMean[0]");
+    float sppeMean1 = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeMean[1]");
+    float sppeMean2 = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeMean[2]");
+
+    float sppeNorm0 = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeNorm[0]");
+    float sppeNorm1 = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeNorm[1]");
+    float sppeNorm2 = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeNorm[2]");
+
+    const float mean_vals[3] = { sppeMean0, sppeMean1, sppeMean2 };
+    const float norm_vals[3] = { sppeNorm0, sppeNorm1, sppeNorm2 };
+
+    // const float mean_vals[3] = {0.485f*255.f, 0.456f*255.f, 0.406f*255.f};
+    // const float norm_vals[3] = {1/0.229f/255.f, 1/0.224f/255.f, 1/0.225f/255.f};
+    // const float mean_vals[3] = {0.406f*255.f, 0.456f*255.f, 0.485f*255.f};
+    // const float norm_vals[3] = {1 / 255.f/0.225f, 1 / 255.f/0.224f, 1 / 255.f/0.229f};
     in.substract_mean_normalize(mean_vals, norm_vals);
 
     ncnn::Extractor ex = sppeNet.create_extractor();
@@ -289,26 +300,45 @@ std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
 
 void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
 {
+    int sppeKpsIdx = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeKpsIdx");
+
     // draw bone
-//    static const int joint_pairs[16][2] = {
-//            {0, 1}, {1, 3}, {0, 2}, {2, 4}, {5, 6}, {5, 7}, {7, 9}, {6, 8}, {8, 10}, {5, 11}, {6, 12}, {11, 12}, {11, 13}, {12, 14}, {13, 15}, {14, 16}
-//    };
-    static const int joint_pairs[12][2] = {
-            {1, 2}, {1, 3}, {3, 5}, {2, 4}, {4, 6}, {1, 7}, {2, 8}, {7, 9}, {9, 11}, {8, 10}, {10, 12}, {7, 8}
+    static const int joint_16_pairs[16][2] = {
+        {0, 1}, {1, 3}, {0, 2}, {2, 4}, {5, 6}, {5, 7}, {7, 9}, {6, 8}, {8, 10}, {5, 11}, {6, 12}, {11, 12}, {11, 13}, {12, 14}, {13, 15}, {14, 16}
+    };
+
+    static const int joint_12_pairs[12][2] = {
+        {1, 2}, {1, 3}, {3, 5}, {2, 4}, {4, 6}, {1, 7}, {2, 8}, {7, 9}, {9, 11}, {8, 10}, {10, 12}, {7, 8}
     };
 
     int sppeKps = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeKps");
     float sppeThresh = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeThresh");
-
-    for (int i = 0; i < sppeKps; i++)
+    
+    switch(sppeKpsIdx)
     {
-        KP p1 = keypoints[joint_pairs[i][0]];
-        KP p2 = keypoints[joint_pairs[i][1]];
+        case 12:
+            for (int i = 0; i < sppeKps; i++)
+            {
+                KP p1 = keypoints[joint_12_pairs[i][0]];
+                KP p2 = keypoints[joint_12_pairs[i][1]];
 
 
-        if (p1.prob < sppeThresh || p2.prob < sppeThresh)
-            continue;
-        cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
+                if (p1.prob < sppeThresh || p2.prob < sppeThresh)
+                    continue;
+                cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
+            }
+
+        case 16:
+            for (int i = 0; i < sppeKps; i++)
+            {
+                KP p1 = keypoints[joint_16_pairs[i][0]];
+                KP p2 = keypoints[joint_16_pairs[i][1]];
+
+
+                if (p1.prob < sppeThresh || p2.prob < sppeThresh)
+                    continue;
+                cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
+            }
     }
 
     // draw joint
