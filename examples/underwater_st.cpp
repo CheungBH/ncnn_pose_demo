@@ -65,6 +65,20 @@ int sz_predictions = 5;
 #define SCREEN_W 960
 #define SCREEN_H 540
 
+
+std::vector<std::string> video_vector = {".mp4", ".avi"};
+std::vector<std::string> image_vector = {".jpg", ".png"};
+
+bool find_kws(std::string src_string, std::vector<std::string> kws){
+    for (int i = 0; i < kws.size(); i++){
+        if (src_string.find(kws[i]) != std::string::npos){
+            return true;
+        }
+    }
+    return false;
+}
+
+
 int main(int argc, char** argv)
 {
 
@@ -81,6 +95,7 @@ int main(int argc, char** argv)
     std::vector<Object> objects;
 
     cv::VideoCapture cap;
+    cv::VideoWriter outputVideo;
 
     ncnn::Net yolov4;
 
@@ -96,6 +111,7 @@ int main(int argc, char** argv)
     }
 
     devicepath = argv[1];
+    std::string path_str(devicepath);
 
 #ifdef NCNN_PROFILING
     double t_load_start = ncnn::get_current_time();
@@ -112,7 +128,7 @@ int main(int argc, char** argv)
     fprintf(stdout, "NCNN Init time %.02lfms\n", t_load_end - t_load_start);
 #endif
 
-    if (strstr(devicepath, "/dev/video") == NULL)
+    if (find_kws(path_str, image_vector))
     {
         frame = cv::imread(argv[1], 1);
         if (frame.empty())
@@ -123,7 +139,20 @@ int main(int argc, char** argv)
     }
     else
     {
-        cap.open(devicepath);
+        if (find_kws(path_str, video_vector)){
+            cap.open(devicepath);
+        }else if (path_str.size() < 10){
+            cap.open(std::stoi(path_str));
+        }else{
+            fprintf(stderr, "Failed to open %s", devicepath);
+        }
+
+        if (argc > 2){
+            int coder = cv::VideoWriter::fourcc('M','J','P','G');
+            cv::Size S = cv::Size((int)cap.get(CV_CAP_PROP_FRAME_WIDTH),
+                                  (int)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+            outputVideo.open(argv[2], coder, 15.0, S, true);
+        }
 
         if (!cap.isOpened())
         {
@@ -187,9 +216,7 @@ int main(int argc, char** argv)
     cv::Mat g_frame, s_frame, drown_frame; //for storing each frame and preprocessed frame;
 
 
-//    List ls;
-
-    while (1)
+    while (true)
     {
         if (is_streaming)
         {
@@ -288,7 +315,15 @@ int main(int argc, char** argv)
 
         if (!is_streaming)
         {   //If it is a still image, exit!
+            if (argc > 2){
+                cv::imwrite(argv[2], drown_frame);
+            }
             return 0;
+        }
+        else{
+            if (argc > 2){
+                outputVideo << drown_frame;
+            }
         }
     }
 
