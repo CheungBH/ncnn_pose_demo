@@ -20,7 +20,7 @@ namespace yolov {
 
     int detect_yolov4(const cv::Mat &bgr, std::vector <Object> &objects, int target_size, ncnn::Net *yolov4);
 
-    cv::Mat draw_objects(const cv::Mat &bgr, const std::vector <Object> &objects, int is_streaming);
+    cv::Mat draw_objects(const cv::Mat &bgr, const std::vector <Object> &objects);
 
     int detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects, int target_size, double resize_ratio, double orig_w, double orig_h, ncnn::Net* yolov4);
 }

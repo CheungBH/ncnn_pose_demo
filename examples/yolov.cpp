@@ -239,7 +239,7 @@ int yolov::detect_padded_yolov4(const cv::Mat& bgr, std::vector<Object>& objects
     return 0;
 }
 
-cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects, int is_streaming)
+cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects)
 {
     static const char* class_names[] = {"background", "person", "bicycle",
                                         "car", "motorbike", "aeroplane", "bus", "train", "truck",

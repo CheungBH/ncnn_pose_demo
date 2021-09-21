@@ -103,6 +103,7 @@ int main(int argc, char** argv)
 
     int target_size = 0;
     int is_streaming = 0;
+    int wait_key = 0;
 
     if (argc < 2)
     {
@@ -170,6 +171,7 @@ int main(int argc, char** argv)
         }
 
         is_streaming = 1;
+        wait_key = 1;
     }
 
     double image_height_pixel = SCREEN_H;
@@ -214,7 +216,7 @@ int main(int argc, char** argv)
     cv::Mat im_raw(image_height_pixel, image_width_pixel, CV_8UC3, cv::Scalar(0, 0, 0));
     cv::Mat im_cnt;
     cv::Mat g_frame, s_frame, drown_frame; //for storing each frame and preprocessed frame;
-
+    drown_frame = frame.clone();
 
     while (true)
     {
@@ -226,7 +228,6 @@ int main(int argc, char** argv)
 
             cap >> frame;
             s_frame = frame.clone();
-            drown_frame = frame.clone();
             im_cnt = im_raw.clone();
 
 #ifdef NCNN_PROFILING
@@ -247,7 +248,7 @@ int main(int argc, char** argv)
 
         std::vector<cv::Rect> b_boxes;
 
-        draw_objects(frame, objects, is_streaming); //Draw detection results on opencv image
+        draw_objects(frame, objects); //Draw detection results on opencv image
 
         for (const auto& object : objects) {
             b_boxes.push_back(object.rect);
@@ -308,10 +309,11 @@ int main(int argc, char** argv)
             }
         }
 
-        cv::imshow("img_cnt", im_cnt);
+        if (is_streaming){
+            cv::imshow("img_cnt", im_cnt);
+        }
         cv::imshow("pose", drown_frame);
-        cv::waitKey(1);
-
+        cv::waitKey(wait_key);
 
         if (!is_streaming)
         {   //If it is a still image, exit!
