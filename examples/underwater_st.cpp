@@ -66,8 +66,9 @@ int sz_predictions = 5;
 #define SCREEN_H 540
 
 
-std::vector<std::string> video_vector = {".mp4", ".avi"};
+std::vector<std::string> video_vector = {".mp4", ".avi", "MOV", "MP4"};
 std::vector<std::string> image_vector = {".jpg", ".png"};
+int min_folder_length = 5;
 
 bool find_kws(std::string src_string, std::vector<std::string> kws){
     for (int i = 0; i < kws.size(); i++){
@@ -142,7 +143,7 @@ int main(int argc, char** argv)
     {
         if (find_kws(path_str, video_vector)){
             cap.open(devicepath);
-        }else if (path_str.size() < 10){
+        }else if (path_str.size() < min_folder_length){
             cap.open(std::stoi(path_str));
         }else{
             fprintf(stderr, "Failed to open %s", devicepath);
@@ -216,7 +217,6 @@ int main(int argc, char** argv)
     cv::Mat im_raw(image_height_pixel, image_width_pixel, CV_8UC3, cv::Scalar(0, 0, 0));
     cv::Mat im_cnt;
     cv::Mat g_frame, s_frame, drown_frame; //for storing each frame and preprocessed frame;
-    drown_frame = frame.clone();
 
     while (true)
     {
@@ -229,6 +229,7 @@ int main(int argc, char** argv)
             cap >> frame;
             s_frame = frame.clone();
             im_cnt = im_raw.clone();
+            drown_frame = frame.clone();
 
 #ifdef NCNN_PROFILING
             double t_capture_end = ncnn::get_current_time();
