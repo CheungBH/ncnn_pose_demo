@@ -27,7 +27,7 @@ namespace sppeNet {
     void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints);
 
     void cropImageFrom(std::vector <cv::Mat> &target, cv::Mat &src, const std::vector <Object> &obj);
-//    int init_sppe(ncnn::Net* sppeNet);
+    int init_sppe(ncnn::Net* sppeNet);
 }
 
 #endif //NCNN_SPPENET_H

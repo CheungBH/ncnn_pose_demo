@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 #ifdef NCNN_PROFILING
     double t_load_start = ncnn::get_current_time();
 #endif
-    int det_loaded = init_yolov4(&yolov4); //We load model and param first!
+    int det_loaded = init_yolov4(&yolov4);
 
 #ifdef NCNN_PROFILING
     double t_load_end = ncnn::get_current_time();
@@ -178,23 +178,23 @@ int main(int argc, char** argv)
     }
 
     // init sppe
-    static ncnn::Net sppeNet;
-//    int loaded_sppe = init_sppe(&sppeNet);
-    static bool is_loaded_sppe = false;
-    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
-    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
-
-    std::string sppe_bin(sppeModel), sppe_param(sppeParam);
-    if((sppe_bin.size() < 3) or (sppe_param.size() < 3))
-    {
-        std::cout<<"Not using pose estimator"<<std::endl;
-    }else
-    {
-        sppeNet.opt.use_vulkan_compute = 1;
-        sppeNet.load_param(sppeParam);
-        sppeNet.load_model(sppeModel);
-        is_loaded_sppe = true;
-    }
+    static ncnn::Net sppe_Net;
+    int loaded_sppe = init_sppe(&sppe_Net);
+//    static bool is_loaded_sppe = false;
+//    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
+//    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
+//
+//    std::string sppe_bin(sppeModel), sppe_param(sppeParam);
+//    if((sppe_bin.size() < 3) or (sppe_param.size() < 3))
+//    {
+//        std::cout<<"Not using pose estimator"<<std::endl;
+//    }else
+//    {
+//        sppeNet.opt.use_vulkan_compute = 1;
+//        sppeNet.load_param(sppeParam);
+//        sppeNet.load_model(sppeModel);
+//        is_loaded_sppe = true;
+//    }
 
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, false};
@@ -293,8 +293,8 @@ int main(int argc, char** argv)
             double area = itr->size[0]*itr->size[1];
             if(area > 10)
             {
-                if (is_loaded_sppe){
-                    skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
+                if (loaded_sppe){
+                    skeletons.push_back(sppeOneAll(*itr, sppe_Net, objects[i]));
                     draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
                 }
                 if (is_loaded_cnn){

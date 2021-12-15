@@ -8,15 +8,24 @@
 #include <algorithm>
 #include <chrono>
 
-//int init_sppe(ncnn::Net* sppeNet){
-//    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
-//    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
-//    int loaded = 1;
-//    sppeNet->opt.use_vulkan_compute = 1;
-//    sppeNet->load_param(sppeParam);
-//    sppeNet->load_model(sppeModel);
-//    return loaded;
-//}
+int sppeNet::init_sppe(ncnn::Net* sppeNet){
+    static bool is_loaded_sppe = false;
+    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
+    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
+
+    std::string sppe_bin(sppeModel), sppe_param(sppeParam);
+    if((sppe_bin.size() < 3) or (sppe_param.size() < 3))
+    {
+        std::cout<<"Not using pose estimator"<<std::endl;
+    }else
+    {
+        sppeNet->opt.use_vulkan_compute = 1;
+        sppeNet->load_param(sppeParam);
+        sppeNet->load_model(sppeModel);
+        is_loaded_sppe = true;
+    }
+    return is_loaded_sppe;
+}
 
 
 void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
@@ -39,9 +48,7 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
 
     int SPPE_TENSOR_W  = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeWidth");
     int SPPE_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeHeight");
-    int SPPE_TENSOR_C = 3;
-    int SPPE_TENSOR_B = 1;
-    
+
     std::vector<KP> target;
 
     cv::Mat img_tmp = src.clone();
