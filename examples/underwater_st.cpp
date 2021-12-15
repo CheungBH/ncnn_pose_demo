@@ -74,11 +74,6 @@ int main(int argc, char** argv)
 
     ConsoleVariableSystem::get()->readFromCfgFile("../../user.cfg");
 
-    const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnParam");
-    const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnModel");
-    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
-    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
-
     double program_begin = ncnn::get_current_time();
 
     cv::Mat frame;
@@ -107,11 +102,7 @@ int main(int argc, char** argv)
 #ifdef NCNN_PROFILING
     double t_load_start = ncnn::get_current_time();
 #endif
-    int yolo_loaded = init_yolov4(&yolov4); //We load model and param first!
-    if (yolo_loaded != 0)
-    {
-        std::cout<<"Not using detector; The detected box will be the whole image"<<std::endl;
-    }
+    int det_loaded = init_yolov4(&yolov4); //We load model and param first!
 
 #ifdef NCNN_PROFILING
     double t_load_end = ncnn::get_current_time();
@@ -171,11 +162,16 @@ int main(int argc, char** argv)
 
     // init cnnNet
     static ncnn::Net cnnNet;
+    const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnParam");
+    const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnModel");
+
     static bool is_loaded_cnn = false;
-    if(!is_loaded_cnn)
+    std::string cnn_bin(cnnModel), cnn_param(cnnParam);
+    if((cnn_bin.size() < 3) or (cnn_param.size() < 3)){
+        std::cout<<"Not using classifier"<<std::endl;
+    }else
     {
         cnnNet.opt.use_vulkan_compute = 1;
-
         cnnNet.load_param(cnnParam);
         cnnNet.load_model(cnnModel);
         is_loaded_cnn = true;
@@ -185,11 +181,16 @@ int main(int argc, char** argv)
     static ncnn::Net sppeNet;
 //    int loaded_sppe = init_sppe(&sppeNet);
     static bool is_loaded_sppe = false;
+    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
+    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
 
-    if(!is_loaded_sppe)
+    std::string sppe_bin(sppeModel), sppe_param(sppeParam);
+    if((sppe_bin.size() < 3) or (sppe_param.size() < 3))
+    {
+        std::cout<<"Not using pose estimator"<<std::endl;
+    }else
     {
         sppeNet.opt.use_vulkan_compute = 1;
-
         sppeNet.load_param(sppeParam);
         sppeNet.load_model(sppeModel);
         is_loaded_sppe = true;
@@ -233,7 +234,7 @@ int main(int argc, char** argv)
         }
 
         std::vector<cv::Rect> b_boxes;
-        if (yolo_loaded == 0){
+        if (det_loaded == 0){
             detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
             draw_objects(frame, objects); //Draw detection results on opencv image
             for (const auto& object : objects) {
@@ -292,9 +293,13 @@ int main(int argc, char** argv)
             double area = itr->size[0]*itr->size[1];
             if(area > 10)
             {
-                skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
-                predictions.push_back(cnn(*itr, cnnNet));
-                draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
+                if (is_loaded_sppe){
+                    skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
+                    draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
+                }
+                if (is_loaded_cnn){
+                    predictions.push_back(cnn(*itr, cnnNet));
+                }
                 // print_topk(predictions[itr-imgs.begin()], 2);
                 i++;
             }

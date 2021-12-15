@@ -35,8 +35,14 @@ int yolov::init_yolov4(ncnn::Net* yolov4)
     const char* yolov4_param = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("yoloParam");
     const char* yolov4_model = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("yoloModel");
 
-
     ret = yolov4->load_param(yolov4_param);
+
+    std::string param_path(yolov4_param), bin_path(yolov4_model);
+    if ((param_path.size() < 3) or (bin_path.size() < 3)){
+        std::cout<<"Not using detector; The detected box will be the whole image"<<std::endl;
+        return -1;
+    }
+
     if (ret != 0)
     {
         return ret;
@@ -203,3 +209,5 @@ cv::Mat yolov::draw_objects(const cv::Mat& bgr, const std::vector<Object>& objec
 
     return image;
 }
+
+
