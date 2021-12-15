@@ -233,7 +233,7 @@ int main(int argc, char** argv)
         }
 
         std::vector<cv::Rect> b_boxes;
-        if (yolo_loaded == 1){
+        if (yolo_loaded == 0){
             detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
             draw_objects(frame, objects); //Draw detection results on opencv image
             for (const auto& object : objects) {
