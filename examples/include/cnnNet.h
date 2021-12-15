@@ -12,7 +12,7 @@
 
 namespace cnnNet{
     std::vector<float> cnn(const cv::Mat &src, const ncnn::Net& cnnNet);
-
+    int init_CNN(ncnn::Net* CNNNet);
     int print_topk(const std::vector<float> &cls_scores, int topk);
 }
 

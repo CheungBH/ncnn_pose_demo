@@ -162,39 +162,11 @@ int main(int argc, char** argv)
 
     // init cnnNet
     static ncnn::Net cnnNet;
-    const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnParam");
-    const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnModel");
-
-    static bool is_loaded_cnn = false;
-    std::string cnn_bin(cnnModel), cnn_param(cnnParam);
-    if((cnn_bin.size() < 3) or (cnn_param.size() < 3)){
-        std::cout<<"Not using classifier"<<std::endl;
-    }else
-    {
-        cnnNet.opt.use_vulkan_compute = 1;
-        cnnNet.load_param(cnnParam);
-        cnnNet.load_model(cnnModel);
-        is_loaded_cnn = true;
-    }
+    int loaded_cnn = init_CNN(&cnnNet);
 
     // init sppe
     static ncnn::Net sppe_Net;
     int loaded_sppe = init_sppe(&sppe_Net);
-//    static bool is_loaded_sppe = false;
-//    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
-//    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
-//
-//    std::string sppe_bin(sppeModel), sppe_param(sppeParam);
-//    if((sppe_bin.size() < 3) or (sppe_param.size() < 3))
-//    {
-//        std::cout<<"Not using pose estimator"<<std::endl;
-//    }else
-//    {
-//        sppeNet.opt.use_vulkan_compute = 1;
-//        sppeNet.load_param(sppeParam);
-//        sppeNet.load_model(sppeModel);
-//        is_loaded_sppe = true;
-//    }
 
 //    List list;
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, false};
@@ -297,7 +269,7 @@ int main(int argc, char** argv)
                     skeletons.push_back(sppeOneAll(*itr, sppe_Net, objects[i]));
                     draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
                 }
-                if (is_loaded_cnn){
+                if (loaded_cnn){
                     predictions.push_back(cnn(*itr, cnnNet));
                 }
                 // print_topk(predictions[itr-imgs.begin()], 2);
@@ -306,7 +278,7 @@ int main(int argc, char** argv)
         }
 
         if (is_streaming){
-            cv::imshow("img_cnt", im_cnt);
+//            cv::imshow("img_cnt", im_cnt);
         }
         cv::imshow("pose", drown_frame);
         cv::waitKey(wait_key);

@@ -10,6 +10,26 @@
 #include <chrono>
 
 //CNN begin
+
+int cnnNet::init_CNN(ncnn::Net* CNNNet){
+    const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnParam");
+    const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("cnnModel");
+
+    static bool is_loaded_cnn = false;
+    std::string cnn_bin(cnnModel), cnn_param(cnnParam);
+    if((cnn_bin.size() < 3) or (cnn_param.size() < 3)){
+        std::cout<<"Not using classifier"<<std::endl;
+    }else
+    {
+        CNNNet->opt.use_vulkan_compute = 1;
+        CNNNet->load_param(cnnParam);
+        CNNNet->load_model(cnnModel);
+        is_loaded_cnn = true;
+    }
+    return is_loaded_cnn;
+}
+
+
 std::vector<float> cnnNet::cnn(const cv::Mat &src, const ncnn::Net& cnnNet)
 {
     std::vector<float> target;
