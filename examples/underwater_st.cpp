@@ -45,22 +45,10 @@
 #include "benchmark.h"
 #endif
 
-//#define YOLO_TENSOR_W 416
-//#define YOLO_TENSOR_H 416
-//#define YOLO_TENSOR_C 3
-//#define YOLO_TENSOR_N 1
-
-extern int YOLO_TENSOR_W , YOLO_TENSOR_H, YOLO_TENSOR_C, YOLO_TENSOR_N;
-extern int SPPE_TENSOR_W , SPPE_TENSOR_H, SPPE_TENSOR_C, SPPE_TENSOR_N;
 
 using namespace yolov;
 using namespace sppeNet;
 using namespace cnnNet;
-
-int sz_boxes = 10;
-int sz_skeletons = 30;
-int sz_cnt = 10;
-int sz_predictions = 5;
 
 #define SCREEN_W 960
 #define SCREEN_H 540
