@@ -2,10 +2,10 @@
 // Created by hkuit164 on 15/12/2021.
 //
 
-#ifndef NCNN_AIPROCESSOR_H
+#ifndef NCNN_AIPROCESSOR_CPP
 #define NCNN_AIPROCESSOR_H
 
-#endif //NCNN_AIPROCESSOR_H
+#endif //NCNN_AIPROCESSOR_CPP
 
 #include "yolov.h"
 #include "sppeNet.h"
