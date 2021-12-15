@@ -52,6 +52,7 @@ using namespace cnnNet;
 
 #define SCREEN_W 960
 #define SCREEN_H 540
+#define YOLO_INPUT 416
 
 
 std::vector<std::string> video_vector = {".mp4", ".avi", "MOV", "MP4"};
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
 
     const char* devicepath;
 
-    int target_size = 0;
+    int yolo_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("yoloWidth");
     int is_streaming = 0;
     int wait_key = 0;
 
@@ -106,7 +107,7 @@ int main(int argc, char** argv)
 #ifdef NCNN_PROFILING
     double t_load_start = ncnn::get_current_time();
 #endif
-    int ret = init_yolov4(&yolov4, &target_size); //We load model and param first!
+    int ret = init_yolov4(&yolov4); //We load model and param first!
     if (ret != 0)
     {
         fprintf(stderr, "Failed to load model or param, error %d", ret);
@@ -233,7 +234,7 @@ int main(int argc, char** argv)
         }
 
 
-        detect_yolov4(frame, objects, target_size, &yolov4); //Create an extractor and run detection
+        detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
 
         std::vector<cv::Rect> b_boxes;
 
