@@ -169,7 +169,6 @@ int main(int argc, char** argv)
 
     double w_num = 10;
     double h_num = 10;
-    bool write = false;
 
     // init cnnNet
     static ncnn::Net cnnNet;
@@ -185,6 +184,7 @@ int main(int argc, char** argv)
 
     // init sppe
     static ncnn::Net sppeNet;
+//    int loaded_sppe = init_sppe(&sppeNet);
     static bool is_loaded_sppe = false;
 
     if(!is_loaded_sppe)
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
     }
 
 //    List list;
-    RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, write};
+    RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, false};
     DrownAnalysis analysis = DrownAnalysis{};
 
     std::vector<cv::Mat> imgs;
@@ -235,9 +235,7 @@ int main(int argc, char** argv)
 
 
         detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
-
         std::vector<cv::Rect> b_boxes;
-
         draw_objects(frame, objects); //Draw detection results on opencv image
 
         for (const auto& object : objects) {
@@ -277,21 +275,13 @@ int main(int argc, char** argv)
         auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
         std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
 
-
-//        cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
-//        cv::Mat padded_temp = sppe_padded_img.clone();
-//        cv::Mat dis = padded_sppe_img(img_temp, padded_temp, bbox.second, tmp.x, tmp.y);
-
-
         int i = 0;
-
         for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
         {
             double area = itr->size[0]*itr->size[1];
             if(area > 10)
             {
                 skeletons.push_back(sppeOneAll(*itr, sppeNet, objects[i]));
-//                skeletons.push_back(sppeOne(*itr, sppeNet));
                 predictions.push_back(cnn(*itr, cnnNet));
                 draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
                 // print_topk(predictions[itr-imgs.begin()], 2);
@@ -319,5 +309,4 @@ int main(int argc, char** argv)
         }
     }
 
-    return 0;
 }

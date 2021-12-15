@@ -4,8 +4,6 @@
 #pragma once
 
 #include "net.h"
-//#include "RegionProcessor.h"
-
 #include <opencv2/core/mat.hpp>
 
 struct Object

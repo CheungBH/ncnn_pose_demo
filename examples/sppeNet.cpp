@@ -8,6 +8,17 @@
 #include <algorithm>
 #include <chrono>
 
+//int init_sppe(ncnn::Net* sppeNet){
+//    const char* sppeParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeParam");
+//    const char* sppeModel = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeModel");
+//    int loaded = 1;
+//    sppeNet->opt.use_vulkan_compute = 1;
+//    sppeNet->load_param(sppeParam);
+//    sppeNet->load_model(sppeModel);
+//    return loaded;
+//}
+
+
 void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj)
 {
     target.clear();
