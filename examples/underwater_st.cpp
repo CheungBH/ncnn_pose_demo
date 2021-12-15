@@ -265,7 +265,7 @@ int main(int argc, char** argv)
             if(area > 10)
             {
                 if (loaded_sppe){
-                    skeletons.push_back(sppeOneAll(*itr, sppe_Net, objects[i]));
+                    skeletons.push_back(sppeOneAll(*itr, sppe_Net, objects[i].rect));
                     draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
                 }
                 if (loaded_cnn){

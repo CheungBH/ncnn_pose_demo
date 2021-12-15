@@ -2,7 +2,8 @@
 // Created by sean on 2021/4/9.
 //
 #include "sppeNet.h"
-#include "Img_tns.h"
+#include <iostream>
+
 #include "ConsoleVariableSystem.h"
 
 #include <algorithm>
@@ -41,7 +42,7 @@ void sppeNet::cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src
     return;
 }
 
-std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const Object& obj) {
+std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const cv::Rect& box) {
 
     const char* sppeInput = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeInput");
     const char* sppeOutput = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("sppeOutput");
@@ -105,10 +106,6 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     const float mean_vals[3] = { sppeMean0, sppeMean1, sppeMean2 };
     const float norm_vals[3] = { sppeNorm0, sppeNorm1, sppeNorm2 };
 
-    // const float mean_vals[3] = {0.485f*255.f, 0.456f*255.f, 0.406f*255.f};
-    // const float norm_vals[3] = {1/0.229f/255.f, 1/0.224f/255.f, 1/0.225f/255.f};
-    // const float mean_vals[3] = {0.406f*255.f, 0.456f*255.f, 0.485f*255.f};
-    // const float norm_vals[3] = {1 / 255.f/0.225f, 1 / 255.f/0.224f, 1 / 255.f/0.229f};
     in.substract_mean_normalize(mean_vals, norm_vals);
 
     ncnn::Extractor ex = sppeNet.create_extractor();
@@ -145,8 +142,8 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
         }
 
         KP keypoint;
-        float coord_x = (float) ((float) max_x / (float) out_w * (float) SPPE_TENSOR_W - (float )padded_x) / (float) resize_ratio + obj.rect.x;
-        float coord_y = (float) ((float) max_y / (float) out_h * (float) SPPE_TENSOR_H - (float )padded_y) / (float) resize_ratio + obj.rect.y;
+        float coord_x = (float) ((float) max_x / (float) out_w * (float) SPPE_TENSOR_W - (float )padded_x) / (float) resize_ratio + box.x;
+        float coord_y = (float) ((float) max_y / (float) out_h * (float) SPPE_TENSOR_H - (float )padded_y) / (float) resize_ratio + box.y;
         keypoint.p = cv::Point2f(coord_x, coord_y);
 //        keypoint.p = cv::Point2f(max_x * w / (float)out.w, max_y * h / (float)out.h);
         keypoint.prob = max_prob;
@@ -157,104 +154,6 @@ std::vector<KP> sppeNet::sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet
     return target;
 }
 
-//sPPE begin
-void sppeNet::cropImageFrom(std::vector<cv::Mat> &target, cv::Mat &src, const std::vector<Object> &obj)
-{
-    int SPPE_TENSOR_W  = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeWidth");
-    int SPPE_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeHeight");
-    int SPPE_TENSOR_C = 3;
-    int SPPE_TENSOR_B = 1;
-
-    target.clear();
-//    printf("Crop Image...\n");
-
-    //...
-    cv::Scalar grey_value(128, 128, 128);
-    cv::Mat sppe_padded_img(SPPE_TENSOR_H, SPPE_TENSOR_W, CV_8UC3, grey_value);
-    cv::Mat padded_temp = sppe_padded_img.clone();
-
-    for(auto itr = obj.begin(); itr != obj.end(); itr++)
-    {
-        double area = itr->rect.width*itr->rect.height;
-
-        cv::Mat padded = padded_sppe_img(src, padded_temp, itr->rect, itr->rect.width, itr->rect.height);
-        cv::imshow("padded_sppe", padded);
-        target.push_back(padded.clone());
-    }
-
-    return;
-}
-
-std::vector<KP> sppeNet::sppeOne(const cv::Mat &src, const ncnn::Net& sppeNet)
-{
-    int SPPE_TENSOR_W  = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeWidth");
-    int SPPE_TENSOR_H = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeHeight");
-    int SPPE_TENSOR_C = 3;
-    int SPPE_TENSOR_B = 1;
-
-    std::vector<KP> target;
-
-    int w = src.cols, h = src.rows;
-
-    auto start = std::chrono::steady_clock::now();
-
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(src.data, ncnn::Mat::PIXEL_BGR2RGB, w, h, 256, 320);
-
-    const float mean_vals[3] = {0.485f * 255.f, 0.456f * 255.f, 0.406f * 255.f};
-    const float norm_vals[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
-    in.substract_mean_normalize(mean_vals, norm_vals);
-
-    auto end = std::chrono::steady_clock::now();
-
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "[SPPE] sppeNet resize time: " << duration.count() << "s\n";
-
-    start = std::chrono::steady_clock::now();
-
-    ncnn::Extractor ex = sppeNet.create_extractor();
-
-    ex.input("input.1", in);
-
-    ncnn::Mat out;
-    ex.extract("1123", out);
-
-    end = std::chrono::steady_clock::now();
-
-    duration = end - start;
-    std::cout << "[SPPE] sppeNet inference time: " << duration.count() << "s\n";
-
-
-    for (int p = 0; p < out.c; p++)
-    {
-        const ncnn::Mat m = out.channel(p);
-
-        float max_prob = 0.f;
-        int max_x = 0;
-        int max_y = 0;
-        for (int y = 0; y < out.h; y++)
-        {
-            const float* ptr = m.row(y);
-            for (int x = 0; x < out.w; x++)
-            {
-                float prob = ptr[x];
-                if (prob > max_prob)
-                {
-                    max_prob = prob;
-                    max_x = x;
-                    max_y = y;
-                }
-            }
-        }
-
-        KP keypoint;
-        keypoint.p = cv::Point2f(max_x * w / (float)out.w, max_y * h / (float)out.h);
-        keypoint.prob = max_prob;
-
-        target.push_back(keypoint);
-    }
-
-    return target;
-}
 
 //void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
 //{

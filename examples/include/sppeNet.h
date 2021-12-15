@@ -7,7 +7,7 @@
 
 #include "net.h"
 #include "yolov.h"
-
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <opencv2/core/mat.hpp>
 
@@ -19,14 +19,8 @@ struct KP
 
 namespace sppeNet {
     void cropImageOriginal(std::vector<cv::Mat> &target, const cv::Mat &src, const std::vector<Object> &obj);
-
-    std::vector <KP> sppeOne(const cv::Mat &src, const ncnn::Net &sppeNet);
-
-    std::vector <KP> sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const Object &obj);
-
+    std::vector <KP> sppeOneAll(const cv::Mat &src, const ncnn::Net &sppeNet, const cv::Rect& box);
     void draw_pose(const cv::Mat &bgr, const std::vector <KP> &keypoints);
-
-    void cropImageFrom(std::vector <cv::Mat> &target, cv::Mat &src, const std::vector <Object> &obj);
     int init_sppe(ncnn::Net* sppeNet);
 }
 
