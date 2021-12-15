@@ -3,6 +3,8 @@
 #include "TrackingBox.h"
 #include <chrono>
 #include <time.h>
+
+#include <iostream>
 using namespace std::chrono;
 
 #define YELLOW_CNT 5

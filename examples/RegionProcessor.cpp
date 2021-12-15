@@ -1,8 +1,4 @@
-#include "SRBox.h"
 #include "RegionProcessor.h"
-#include "utils.h"
-#include "TrackingBox.h"
-
 Utils utils;
 
 RegionProcessor::RegionProcessor(double w, double h, double w_num, double h_num, bool write) {

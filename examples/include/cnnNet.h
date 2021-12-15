@@ -6,7 +6,10 @@
 #define NCNN_CNNNET_H
 
 #include "net.h"
-
+#include "ConsoleVariableSystem.h"
+#include <iostream>
+#include <algorithm>
+#include <chrono>
 #include <vector>
 #include <opencv2/core/core.hpp>
 

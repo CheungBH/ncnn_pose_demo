@@ -3,11 +3,6 @@
 //
 #include "yolov.h"
 //#include "Hungarian.h"
-#include "utils.h"
-#include "ConsoleVariableSystem.h"
-
-#include <algorithm>
-#include <chrono>
 
 //yolo begin
 

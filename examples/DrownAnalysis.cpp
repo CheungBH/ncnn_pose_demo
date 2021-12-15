@@ -1,5 +1,5 @@
 #include "DrownAnalysis.h"
-#include <iostream>
+
 
 bool DrownAnalysis::judge(const cv::Rect_<float>& box_coord) {
 	// drown detection

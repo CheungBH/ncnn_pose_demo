@@ -2,12 +2,7 @@
 // Created by sean on 2021/4/9.
 //
 #include "sppeNet.h"
-#include <iostream>
 
-#include "ConsoleVariableSystem.h"
-
-#include <algorithm>
-#include <chrono>
 
 int sppeNet::init_sppe(ncnn::Net* sppeNet){
     static bool is_loaded_sppe = false;

@@ -18,12 +18,8 @@
 #include "Tracker.h"
 #include "RegionProcessor.h"
 #include "Hungarian.h"
-#include "utils.h"
 #include "ConsoleVariableSystem.h"
-
-#include <algorithm>
 #include <opencv2/core/core.hpp>
-
 #include <chrono>
 
 
@@ -52,7 +48,6 @@ using namespace cnnNet;
 
 #define SCREEN_W 960
 #define SCREEN_H 540
-#define YOLO_INPUT 416
 
 
 std::vector<std::string> video_vector = {".mp4", ".avi", "MOV", "MP4"};

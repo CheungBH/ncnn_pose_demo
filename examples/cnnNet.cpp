@@ -3,11 +3,7 @@
 //
 
 #include "cnnNet.h"
-#include "ConsoleVariableSystem.h"
 
-#include <iostream>
-#include <algorithm>
-#include <chrono>
 
 //CNN begin
 

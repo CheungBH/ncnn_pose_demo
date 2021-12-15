@@ -6,6 +6,8 @@
 #include <math.h>
 #include "SRBox.h"
 #include "TrackingBox.h"
+#include "SRBox.h"
+#include "utils.h"
 
 class RegionProcessor {
 public:

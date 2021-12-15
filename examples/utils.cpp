@@ -1,9 +1,6 @@
 #include "utils.h"
 //Image
-#include <opencv2/opencv.hpp>
-#include "opencv2/video/tracking.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include <opencv2/imgproc/imgproc.hpp>
+
 
 bool Utils::is_element_in_vector(std::vector<std::pair<double, double>> v, std::pair<double, double> element){
 	std::vector< std::pair<double, double>>::iterator it;
