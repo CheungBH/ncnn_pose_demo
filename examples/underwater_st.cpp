@@ -22,7 +22,6 @@
 #include <opencv2/core/core.hpp>
 #include <chrono>
 
-
 #if CV_MAJOR_VERSION >= 33
 #include <opencv2/videoio/videoio.hpp>
 #endif
@@ -49,19 +48,9 @@ using namespace cnnNet;
 #define SCREEN_W 960
 #define SCREEN_H 540
 
-
 std::vector<std::string> video_vector = {".mp4", ".avi", "MOV", "MP4"};
 std::vector<std::string> image_vector = {".jpg", ".png"};
 int min_folder_length = 5;
-
-bool find_kws(std::string src_string, std::vector<std::string> kws){
-    for (int i = 0; i < kws.size(); i++){
-        if (src_string.find(kws[i]) != std::string::npos){
-            return true;
-        }
-    }
-    return false;
-}
 
 
 int main(int argc, char** argv)

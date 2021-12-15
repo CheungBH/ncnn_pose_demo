@@ -1,8 +1,7 @@
 #include "utils.h"
-//Image
 
 
-bool Utils::is_element_in_vector(std::vector<std::pair<double, double>> v, std::pair<double, double> element){
+bool is_element_in_vector(std::vector<std::pair<double, double>> v, std::pair<double, double> element){
 	std::vector< std::pair<double, double>>::iterator it;
 	it = find(v.begin(), v.end(), element);
 	if (it != v.end()) {
@@ -12,7 +11,7 @@ bool Utils::is_element_in_vector(std::vector<std::pair<double, double>> v, std::
 		return false;
 	}
 }
-std::vector<std::vector<float>> Utils::Rect2vf(std::vector<cv::Rect> rect_boxes)
+std::vector<std::vector<float>> Rect2vf(std::vector<cv::Rect> rect_boxes)
 {
 	std::vector<std::vector<float>> vf_boxes;
 	for (auto &box : rect_boxes) {
@@ -25,7 +24,7 @@ std::vector<std::vector<float>> Utils::Rect2vf(std::vector<cv::Rect> rect_boxes)
 }
 
 
-std::pair<double, double> Utils::cal_center_point(std::vector<double> box) {
+std::pair<double, double> cal_center_point(std::vector<double> box) {
 	return { ((box[2] - box[0]) / 2) + box[0] , ((box[3] - box[1]) / 2) + box[1] };
 }
 
@@ -50,7 +49,7 @@ void drawboundary(cv::Mat image, double image_width_pixel, double image_height_p
 }
 
 
-bool Utils::is_int_element_in_vector(std::vector<int> v, int element) {
+bool is_int_element_in_vector(std::vector<int> v, int element) {
 	std::vector<int>::iterator it;
 	it = find(v.begin(), v.end(), element);
 	if (it != v.end()) {
@@ -60,6 +59,16 @@ bool Utils::is_int_element_in_vector(std::vector<int> v, int element) {
 		return false;
 	}
 };
+
+bool find_kws(std::string src_string, std::vector<std::string> kws){
+    for (int i = 0; i < kws.size(); i++){
+        if (src_string.find(kws[i]) != std::string::npos){
+            return true;
+        }
+    }
+    return false;
+}
+
 
 /*
 bool is_element_in_vector(std::vector< std::pair<double, double>> v, std::pair<double, double> element) {

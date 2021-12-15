@@ -1,5 +1,5 @@
 #include "RegionProcessor.h"
-Utils utils;
+
 
 RegionProcessor::RegionProcessor(double w, double h, double w_num, double h_num, bool write) {
 	height = h; width = w;
@@ -86,7 +86,7 @@ std::vector< std::pair<double, double> > RegionProcessor::center_region(std::vec
 
 	for (auto &box : boxes) // access by reference to avoid copying
 	{
-		std::pair<double, double> center = utils.cal_center_point(box);
+		std::pair<double, double> center = cal_center_point(box);
 		center_regions.push_back(locate(center));
 	}
 
@@ -155,13 +155,13 @@ std::vector<std::vector<std::pair<double, double>>> RegionProcessor::box2region(
 	empty_case = {};
 
 	for (auto &r_idx : region_idx) {
-		if (utils.is_element_in_vector(centers, r_idx)) {
+		if (is_element_in_vector(centers, r_idx)) {
 			RegionProcessor::update_case.push_back(r_idx);
 		}
-		else if (utils.is_element_in_vector(covers, r_idx)) {
+		else if (is_element_in_vector(covers, r_idx)) {
 			RegionProcessor::update_case.push_back(r_idx);
 		}
-		else if (utils.is_element_in_vector(occupies, r_idx)) {
+		else if (is_element_in_vector(occupies, r_idx)) {
 			RegionProcessor::keep_case.push_back(r_idx);
 		}
 		else {
