@@ -107,11 +107,10 @@ int main(int argc, char** argv)
 #ifdef NCNN_PROFILING
     double t_load_start = ncnn::get_current_time();
 #endif
-    int ret = init_yolov4(&yolov4); //We load model and param first!
-    if (ret != 0)
+    int yolo_loaded = init_yolov4(&yolov4); //We load model and param first!
+    if (yolo_loaded != 0)
     {
-        fprintf(stderr, "Failed to load model or param, error %d", ret);
-        return -1;
+        std::cout<<"Not using detector; The detected box will be the whole image"<<std::endl;
     }
 
 #ifdef NCNN_PROFILING
@@ -233,13 +232,25 @@ int main(int argc, char** argv)
             }
         }
 
-
-        detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
         std::vector<cv::Rect> b_boxes;
-        draw_objects(frame, objects); //Draw detection results on opencv image
-
-        for (const auto& object : objects) {
-            b_boxes.push_back(object.rect);
+        if (yolo_loaded == 1){
+            detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
+            draw_objects(frame, objects); //Draw detection results on opencv image
+            for (const auto& object : objects) {
+                b_boxes.push_back(object.rect);
+            }
+        }else{
+            cv::Rect_<float> whole_image_box;
+            whole_image_box.x = 0;
+            whole_image_box.y = 0;
+            whole_image_box.width = frame.cols - 1;
+            whole_image_box.height = frame.rows - 1;
+            Object obj;
+            obj.rect = whole_image_box;
+            obj.prob = 1;
+            obj.label = 0;
+            objects.push_back(obj);
+            b_boxes.push_back(whole_image_box);
         }
 
         auto start_rp = std::chrono::steady_clock::now();
