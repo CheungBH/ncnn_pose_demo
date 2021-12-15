@@ -77,16 +77,11 @@ int main(int argc, char** argv)
     double program_begin = ncnn::get_current_time();
 
     cv::Mat frame;
-    std::vector<Object> objects;
-
     cv::VideoCapture cap;
     cv::VideoWriter outputVideo;
 
-    ncnn::Net yolov4;
-
     const char* devicepath;
 
-    int yolo_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("yoloWidth");
     int is_streaming = 0;
     int wait_key = 0;
 
@@ -102,7 +97,6 @@ int main(int argc, char** argv)
 #ifdef NCNN_PROFILING
     double t_load_start = ncnn::get_current_time();
 #endif
-    int det_loaded = init_yolov4(&yolov4);
 
 #ifdef NCNN_PROFILING
     double t_load_end = ncnn::get_current_time();
@@ -160,6 +154,10 @@ int main(int argc, char** argv)
     double w_num = 10;
     double h_num = 10;
 
+    ncnn::Net yolov4;
+    int det_loaded = init_yolov4(&yolov4);
+    int yolo_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("yoloWidth");
+
     // init cnnNet
     static ncnn::Net cnnNet;
     int loaded_cnn = init_CNN(&cnnNet);
@@ -172,12 +170,10 @@ int main(int argc, char** argv)
     RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, false};
     DrownAnalysis analysis = DrownAnalysis{};
 
-    std::vector<cv::Mat> imgs;
     std::vector<std::vector<KP>> skeletons;
     std::vector<std::vector<float>> predictions;
     cv::Mat im_raw(image_height_pixel, image_width_pixel, CV_8UC3, cv::Scalar(0, 0, 0));
-    cv::Mat im_cnt;
-    cv::Mat g_frame, s_frame, drown_frame; //for storing each frame and preprocessed frame;
+    cv::Mat drown_frame, im_cnt; //for storing each frame and preprocessed frame;
 
     while (true)
     {
@@ -188,9 +184,9 @@ int main(int argc, char** argv)
 #endif
 
             cap >> frame;
-            s_frame = frame.clone();
             im_cnt = im_raw.clone();
             drown_frame = frame.clone();
+
 
 #ifdef NCNN_PROFILING
             double t_capture_end = ncnn::get_current_time();
@@ -205,7 +201,10 @@ int main(int argc, char** argv)
             }
         }
 
+        std::vector<cv::Mat> imgs;
         std::vector<cv::Rect> b_boxes;
+        std::vector<Object> objects;
+
         if (det_loaded == 0){
             detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
             draw_objects(frame, objects); //Draw detection results on opencv image
@@ -236,7 +235,7 @@ int main(int argc, char** argv)
         auto start_sort = std::chrono::steady_clock::now();
 //		std::vector<std::vector<float>> untracked_boxes = utils_main.Rect2vf(b_boxes);
         std::vector<TrackingBox> frameTrackingResult = SORT(b_boxes);
-        vis_id(frameTrackingResult, s_frame);
+        vis_id(frameTrackingResult, frame);
         auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
         std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
         std::vector<int> alarm_idx = RP.get_alarming_id(frameTrackingResult);
@@ -253,7 +252,7 @@ int main(int argc, char** argv)
         predictions.clear();
 
         auto crop_start = std::chrono::steady_clock::now();
-        std::cout << frame.size << std::endl;
+//        std::cout << frame.size << std::endl;
 //        cropImageFrom(imgs, frame, objects);
         cropImageOriginal(imgs, frame, objects);
         auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
