@@ -19,9 +19,6 @@ struct Object
 
 namespace yolov {
     int init_yolov4(ncnn::Net *yolov4);
-
     int detect_yolov4(const cv::Mat &bgr, std::vector <Object> &objects, int target_size, ncnn::Net *yolov4);
-
     cv::Mat draw_objects(const cv::Mat &bgr, const std::vector <Object> &objects);
-
 }

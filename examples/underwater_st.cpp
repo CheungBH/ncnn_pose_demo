@@ -13,6 +13,7 @@
 // specific language governing permissions and limitations under the License.
 
 #include "yolov.h"
+#include "nanodet.h"
 #include "sppeNet.h"
 #include "cnnNet.h"
 #include "Tracker.h"
@@ -139,8 +140,14 @@ int main(int argc, char** argv)
     double h_num = 10;
 
     ncnn::Net detectnet;
-    int det_loaded = init_yolov4(&detectnet);
     int detector_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("detectorSize");
+    std::string detector_type = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorType");
+    int det_loaded;
+    if (detector_type == "yolo"){
+        det_loaded = init_yolov4(&detectnet);
+    }else if (detector_type == "nanodet"){
+        det_loaded = nanodet::init_nanodet(&detectnet);
+    }
 
     // init cnnNet
     static ncnn::Net cnnNet;
@@ -190,7 +197,11 @@ int main(int argc, char** argv)
         std::vector<Object> objects;
 
         if (det_loaded == 0){
-            detect_yolov4(frame, objects, detector_size, &detectnet); //Create an extractor and run detection
+            if (detector_type == "yolo"){
+                detect_yolov4(frame, objects, detector_size, &detectnet); //Create an extractor and run detection
+            }else if (detector_type == "nanodet"){
+                nanodet::detect_nanodet(&detectnet, frame, objects, detector_size);
+            }
             draw_objects(frame, objects); //Draw detection results on opencv image
             for (const auto& object : objects) {
                 b_boxes.push_back(object.rect);

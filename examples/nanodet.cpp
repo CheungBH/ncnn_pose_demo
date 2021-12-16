@@ -15,27 +15,21 @@
 #include "net.h"
 
 #include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <stdlib.h>
 #include <float.h>
-#include <stdio.h>
 #include <vector>
 #include <iostream>
-#include <sys/stat.h>
-#include <filesystem>
-#include "utils.h"
 #include "yolov.h"
+#include "nanodet.h"
 #define NCNN_PROFILING
 
 
-static inline float intersection_area(const Object& a, const Object& b)
+inline float nanodet::intersection_area(const Object& a, const Object& b)
 {
     cv::Rect_<float> inter = a.rect & b.rect;
     return inter.area();
 }
 
-static void qsort_descent_inplace(std::vector<Object>& faceobjects, int left, int right)
+void nanodet::qsort_descent_inplace(std::vector<Object>& faceobjects, int left, int right)
 {
     int i = left;
     int j = right;
@@ -72,15 +66,15 @@ static void qsort_descent_inplace(std::vector<Object>& faceobjects, int left, in
     }
 }
 
-static void qsort_descent_inplace(std::vector<Object>& faceobjects)
+void nanodet::qsort_descent_inplace(std::vector<Object>& faceobjects)
 {
     if (faceobjects.empty())
         return;
 
-    qsort_descent_inplace(faceobjects, 0, faceobjects.size() - 1);
+    nanodet::qsort_descent_inplace(faceobjects, 0, faceobjects.size() - 1);
 }
 
-static void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold)
+void nanodet::nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vector<int>& picked, float nms_threshold)
 {
     picked.clear();
 
@@ -102,7 +96,7 @@ static void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vecto
             const Object& b = faceobjects[picked[j]];
 
             // intersection over union
-            float inter_area = intersection_area(a, b);
+            float inter_area = nanodet::intersection_area(a, b);
             float union_area = areas[i] + areas[picked[j]] - inter_area;
             // float IoU = inter_area / union_area
             if (inter_area / union_area > nms_threshold)
@@ -114,7 +108,7 @@ static void nms_sorted_bboxes(const std::vector<Object>& faceobjects, std::vecto
     }
 }
 
-static void generate_proposals(const ncnn::Mat& cls_pred, const ncnn::Mat& dis_pred, int stride, const ncnn::Mat& in_pad, float prob_threshold, std::vector<Object>& objects)
+void nanodet::generate_proposals(const ncnn::Mat& cls_pred, const ncnn::Mat& dis_pred, int stride, const ncnn::Mat& in_pad, float prob_threshold, std::vector<Object>& objects)
 {
     const int num_grid = cls_pred.h;
 
@@ -213,13 +207,30 @@ static void generate_proposals(const ncnn::Mat& cls_pred, const ncnn::Mat& dis_p
     }
 }
 
-static int detect_nanodet(ncnn::Net& nanodet,const cv::Mat& bgr, std::vector<Object>& objects)
+int nanodet::init_nanodet(ncnn::Net* detector){
+    const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorParam");
+    const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorModel");
+
+    static bool is_loaded_nanodet = false;
+    std::string cnn_bin(cnnModel), cnn_param(cnnParam);
+    if((cnn_bin.size() < 3) or (cnn_param.size() < 3)){
+        std::cout<<"Not using classifier"<<std::endl;
+    }else
+    {
+        detector->opt.use_vulkan_compute = 1;
+        detector->load_param(cnnParam);
+        detector->load_model(cnnModel);
+        is_loaded_nanodet = true;
+    }
+    return is_loaded_nanodet;
+}
+
+int nanodet::detect_nanodet(ncnn::Net* nanodet,const cv::Mat& bgr, std::vector<Object>& objects, int target_size)
 {
 
     int width = bgr.cols;
     int height = bgr.rows;
 
-    const int target_size = 416;
     const float prob_threshold = 0.4f;
     const float nms_threshold = 0.5f;
 
@@ -239,9 +250,7 @@ static int detect_nanodet(ncnn::Net& nanodet,const cv::Mat& bgr, std::vector<Obj
         h = target_size;
         w = w * scale;
     }
-//#ifdef NCNN_PROFILING
-//    auto nanodet_start_time = std::chrono::high_resolution_clock::now();
-//#endif
+
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR, width, height, w, h);
 
     // pad to target_size rectangle
@@ -254,7 +263,7 @@ static int detect_nanodet(ncnn::Net& nanodet,const cv::Mat& bgr, std::vector<Obj
     const float norm_vals[3] = {0.017429f, 0.017507f, 0.017125f};
     in_pad.substract_mean_normalize(mean_vals, norm_vals);
 
-    ncnn::Extractor ex = nanodet.create_extractor();
+    ncnn::Extractor ex = nanodet->create_extractor();
 
     ex.input("input.1", in_pad);
 
@@ -268,7 +277,7 @@ static int detect_nanodet(ncnn::Net& nanodet,const cv::Mat& bgr, std::vector<Obj
         ex.extract("dis_pred_stride_8", dis_pred);
 
         std::vector<Object> objects8;
-        generate_proposals(cls_pred, dis_pred, 8, in_pad, prob_threshold, objects8);
+        nanodet::generate_proposals(cls_pred, dis_pred, 8, in_pad, prob_threshold, objects8);
 
         proposals.insert(proposals.end(), objects8.begin(), objects8.end());
     }
@@ -281,7 +290,7 @@ static int detect_nanodet(ncnn::Net& nanodet,const cv::Mat& bgr, std::vector<Obj
         ex.extract("dis_pred_stride_16", dis_pred);
 
         std::vector<Object> objects16;
-        generate_proposals(cls_pred, dis_pred, 16, in_pad, prob_threshold, objects16);
+        nanodet::generate_proposals(cls_pred, dis_pred, 16, in_pad, prob_threshold, objects16);
 
         proposals.insert(proposals.end(), objects16.begin(), objects16.end());
     }
@@ -294,16 +303,16 @@ static int detect_nanodet(ncnn::Net& nanodet,const cv::Mat& bgr, std::vector<Obj
         ex.extract("dis_pred_stride_32", dis_pred);
 
         std::vector<Object> objects32;
-        generate_proposals(cls_pred, dis_pred, 32, in_pad, prob_threshold, objects32);
+        nanodet::generate_proposals(cls_pred, dis_pred, 32, in_pad, prob_threshold, objects32);
 
         proposals.insert(proposals.end(), objects32.begin(), objects32.end());
     }
 
-    qsort_descent_inplace(proposals);
+    nanodet::qsort_descent_inplace(proposals);
 
     // apply nms with nms_threshold
     std::vector<int> picked;
-    nms_sorted_bboxes(proposals, picked, nms_threshold);
+    nanodet::nms_sorted_bboxes(proposals, picked, nms_threshold);
 
     int count = picked.size();
     std::cout<<count<<std::endl;
