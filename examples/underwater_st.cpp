@@ -12,8 +12,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-#include "yolov.h"
-#include "nanodet.h"
+#include "Detector.h"
 #include "sppeNet.h"
 #include "cnnNet.h"
 #include "Tracker.h"
@@ -140,14 +139,15 @@ int main(int argc, char** argv)
     double h_num = 10;
 
     ncnn::Net detectnet;
-    int detector_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("detectorSize");
-    std::string detector_type = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorType");
-    int det_loaded;
-    if (detector_type == "yolo"){
-        det_loaded = init_yolov4(&detectnet);
-    }else if (detector_type == "nanodet"){
-        det_loaded = nanodet::init_nanodet(&detectnet);
-    }
+    Detector::init_detector(&detectnet);
+//    int detector_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("detectorSize");
+//    std::string detector_type = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorType");
+//    int det_loaded;
+//    if (detector_type == "yolo"){
+//        det_loaded = init_yolov4(&detectnet);
+//    }else if (detector_type == "nanodet"){
+//        det_loaded = nanodet::init_nanodet(&detectnet);
+//    }
 
     // init cnnNet
     static ncnn::Net cnnNet;
@@ -196,28 +196,29 @@ int main(int argc, char** argv)
         std::vector<cv::Rect> b_boxes;
         std::vector<Object> objects;
 
-        if (det_loaded == 0){
-            if (detector_type == "yolo"){
-                detect_yolov4(frame, objects, detector_size, &detectnet); //Create an extractor and run detection
-            }else if (detector_type == "nanodet"){
-                nanodet::detect_nanodet(&detectnet, frame, objects, detector_size);
-            }
-            draw_objects(frame, objects); //Draw detection results on opencv image
-            for (const auto& object : objects) {
-                b_boxes.push_back(object.rect);
-            }
-        }else{
-            cv::Rect_<float> whole_image_box;
-            whole_image_box.x = 0;
-            whole_image_box.y = 0;
-            whole_image_box.width = frame.cols - 1;
-            whole_image_box.height = frame.rows - 1;
-            Object obj;
-            obj.rect = whole_image_box;
-            obj.prob = 1;
-            obj.label = 0;
-            objects.push_back(obj);
-            b_boxes.push_back(whole_image_box);
+
+//        if (det_loaded == 0){
+//            if (detector_type == "yolo"){
+//                detect_yolov4(frame, objects, detector_size, &detectnet); //Create an extractor and run detection
+//            }else if (detector_type == "nanodet"){
+//                nanodet::detect_nanodet(&detectnet, frame, objects, detector_size);
+//            }
+//            draw_objects(frame, objects); //Draw detection results on opencv image
+//        }else{
+//            cv::Rect_<float> whole_image_box;
+//            whole_image_box.x = 0;
+//            whole_image_box.y = 0;
+//            whole_image_box.width = frame.cols - 1;
+//            whole_image_box.height = frame.rows - 1;
+//            Object obj;
+//            obj.rect = whole_image_box;
+//            obj.prob = 1;
+//            obj.label = 0;
+//            objects.push_back(obj);
+//        }
+        Detector::detect(frame, objects, &detectnet);
+        for (const auto& object : objects) {
+            b_boxes.push_back(object.rect);
         }
 
         auto start_rp = std::chrono::steady_clock::now();

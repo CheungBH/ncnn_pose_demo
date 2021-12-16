@@ -1,4 +1,10 @@
 #pragma once
+
+#ifndef NCNN_TRACKER_H
+#define NCNN_TRACKER_H
+
+#endif
+
 #include <iostream>
 #include <vector>
 #include <set>

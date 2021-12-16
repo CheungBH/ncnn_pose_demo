@@ -18,7 +18,6 @@
 #include <float.h>
 #include <vector>
 #include <iostream>
-#include "yolov.h"
 #include "nanodet.h"
 #define NCNN_PROFILING
 
