@@ -211,7 +211,7 @@ int nanodet::init_nanodet(ncnn::Net* detector){
     const char* cnnParam = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorParam");
     const char* cnnModel= ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorModel");
 
-    static bool is_loaded_nanodet = false;
+    static bool is_loaded_nanodet = 1;
     std::string cnn_bin(cnnModel), cnn_param(cnnParam);
     if((cnn_bin.size() < 3) or (cnn_param.size() < 3)){
         std::cout<<"Not using classifier"<<std::endl;
@@ -220,7 +220,7 @@ int nanodet::init_nanodet(ncnn::Net* detector){
         detector->opt.use_vulkan_compute = 1;
         detector->load_param(cnnParam);
         detector->load_model(cnnModel);
-        is_loaded_nanodet = true;
+        is_loaded_nanodet = 0;
     }
     return is_loaded_nanodet;
 }
