@@ -176,8 +176,6 @@ int main(int argc, char** argv)
 
             cap >> frame;
             im_cnt = im_raw.clone();
-            drown_frame = frame.clone();
-
 
 #ifdef NCNN_PROFILING
             double t_capture_end = ncnn::get_current_time();
@@ -191,6 +189,7 @@ int main(int argc, char** argv)
                 return -1;
             }
         }
+        drown_frame = frame.clone();
 
         std::vector<cv::Mat> imgs;
         std::vector<cv::Rect> b_boxes;

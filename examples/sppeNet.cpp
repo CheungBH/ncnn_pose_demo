@@ -226,31 +226,29 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
     int sppeKps = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("sppeKps");
     float sppeThresh = ConsoleVariableSystem::get()->getFloatVariableCurrentByHash("sppeThresh");
     
-    switch(sppeKpsIdx)
-    {
-        case 12:
-            for (int i = 0; i < sppeKps; i++)
-            {
-                KP p1 = keypoints[joint_12_pairs[i][0]];
-                KP p2 = keypoints[joint_12_pairs[i][1]];
+
+    if (sppeKps == 12){
+        for (int i = 0; i < sppeKps; i++)
+        {
+            KP p1 = keypoints[joint_12_pairs[i][0]];
+            KP p2 = keypoints[joint_12_pairs[i][1]];
 
 
-                if (p1.prob < sppeThresh || p2.prob < sppeThresh)
-                    continue;
-                cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
-            }
+            if (p1.prob < sppeThresh || p2.prob < sppeThresh)
+                continue;
+            cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
+        }
+    }else if (sppeKps == 16){
+        for (int i = 0; i < sppeKps; i++)
+        {
+            KP p1 = keypoints[joint_16_pairs[i][0]];
+            KP p2 = keypoints[joint_16_pairs[i][1]];
 
-        case 16:
-            for (int i = 0; i < sppeKps; i++)
-            {
-                KP p1 = keypoints[joint_16_pairs[i][0]];
-                KP p2 = keypoints[joint_16_pairs[i][1]];
 
-
-                if (p1.prob < sppeThresh || p2.prob < sppeThresh)
-                    continue;
-                cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
-            }
+            if (p1.prob < sppeThresh || p2.prob < sppeThresh)
+                continue;
+            cv::line(bgr, p1.p, p2.p, cv::Scalar(255, 0, 0), 2);
+        }
     }
 
     // draw joint
@@ -258,16 +256,7 @@ void sppeNet::draw_pose(const cv::Mat& bgr, const std::vector<KP>& keypoints)
     {
         KP keypoint = keypoints[i];
 
-//        keypoint.p.x *= obj.rect.width / SPPE_TENSOR_W;
-//        keypoint.p.x += obj.rect.x;
-//        keypoint.p.y *= obj.rect.height / SPPE_TENSOR_H;
-//        keypoint.p.y += obj.rect.y;
-//        keypoint.p.x += obj.rect.x;
-//        keypoint.p.y += obj.rect.y;
-
-        // fprintf(stderr, "%.2f %.2f = %.5f\n", keypoint.p.x, keypoint.p.y, keypoint.prob);
-
-        if (keypoint.prob < 0.2f)
+        if (keypoint.prob < sppeThresh)
             continue;
 
         cv::circle(bgr, keypoint.p, 3, cv::Scalar(0, 255, 0), -1);
