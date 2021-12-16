@@ -138,9 +138,9 @@ int main(int argc, char** argv)
     double w_num = 10;
     double h_num = 10;
 
-    ncnn::Net yolov4;
-    int det_loaded = init_yolov4(&yolov4);
-    int yolo_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("yoloWidth");
+    ncnn::Net detectnet;
+    int det_loaded = init_yolov4(&detectnet);
+    int detector_size = ConsoleVariableSystem::get()->getIntVariableCurrentByHash("detectorSize");
 
     // init cnnNet
     static ncnn::Net cnnNet;
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
         std::vector<Object> objects;
 
         if (det_loaded == 0){
-            detect_yolov4(frame, objects, yolo_size, &yolov4); //Create an extractor and run detection
+            detect_yolov4(frame, objects, detector_size, &detectnet); //Create an extractor and run detection
             draw_objects(frame, objects); //Draw detection results on opencv image
             for (const auto& object : objects) {
                 b_boxes.push_back(object.rect);

@@ -27,8 +27,8 @@ int yolov::init_yolov4(ncnn::Net* yolov4)
 
     /* --> End of setting params <-- */
     int ret = 0;
-    const char* yolov4_param = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("yoloParam");
-    const char* yolov4_model = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("yoloModel");
+    const char* yolov4_param = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorParam");
+    const char* yolov4_model = ConsoleVariableSystem::get()->getStringVariableCurrentByHash("detectorModel");
 
     ret = yolov4->load_param(yolov4_param);
 
