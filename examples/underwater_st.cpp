@@ -20,7 +20,7 @@
 #include "Hungarian.h"
 #include "ConsoleVariableSystem.h"
 #include <opencv2/core/core.hpp>
-#include <chrono>
+//#include "AIProcessor.h"
 
 #if CV_MAJOR_VERSION >= 33
 #include <opencv2/videoio/videoio.hpp>
@@ -34,7 +34,6 @@
 #include <stdio.h>
 
 #define NCNN_PROFILING
-#define YOLOV4_TINY //Using yolov4_tiny, if undef, using original yolov4
 
 #ifdef NCNN_PROFILING
 #include "benchmark.h"
@@ -132,6 +131,8 @@ int main(int argc, char** argv)
         wait_key = 1;
     }
 
+//    AIProcessor::init();
+
     double image_height_pixel = SCREEN_H;
     double image_width_pixel = SCREEN_W;
 
@@ -167,7 +168,6 @@ int main(int argc, char** argv)
 #endif
 
             cap >> frame;
-            im_cnt = im_raw.clone();
 
 #ifdef NCNN_PROFILING
             double t_capture_end = ncnn::get_current_time();
@@ -181,6 +181,7 @@ int main(int argc, char** argv)
                 return -1;
             }
         }
+//        cv::Mat drown_frame = AIProcessor::process(frame);
         drown_frame = frame.clone();
 
         std::vector<cv::Mat> imgs;
