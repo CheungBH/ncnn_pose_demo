@@ -42,7 +42,7 @@ std::vector<Object> Detector::select_largest(std::vector<Object> objects){
     Object selected_object;
     float max_size = 0;
     for (auto& object : objects) {
-        float box_size = object.rect.x * object.rect.y;
+        float box_size = object.rect.width * object.rect.height;
         if (box_size > max_size){
             selected_object = object;
             max_size = box_size;
@@ -104,7 +104,10 @@ void Detector::detect(const cv::Mat &bgr, std::vector <Object> &objects, ncnn::N
         } else if (detector_type == "nanodet") {
             nanodet::detect_nanodet(net, bgr, objects, input_size);
         }
-        objects = Detector::scale(objects, bgr.rows, bgr.cols);
+        int image_height = bgr.rows;
+        int image_width = bgr.cols;
+        objects = Detector::select_objects(objects, image_height, image_width);
+        objects = Detector::scale(objects, image_height, image_width);
         Detector::draw_objects(bgr, objects); //Draw detection results on opencv image
     } else {
         cv::Rect_<float> whole_image_box;
