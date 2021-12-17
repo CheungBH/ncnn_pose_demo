@@ -12,25 +12,14 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-#include "Detector.h"
-#include "sppeNet.h"
-#include "cnnNet.h"
-#include "Tracker.h"
-#include "RegionProcessor.h"
-#include "Hungarian.h"
-#include "ConsoleVariableSystem.h"
 #include <opencv2/core/core.hpp>
-//#include "AIProcessor.h"
+#include "AIProcessor.h"
 
 #if CV_MAJOR_VERSION >= 33
 #include <opencv2/videoio/videoio.hpp>
 #endif
 
 #include <vector>
-//#include "RegionProcessor.h"
-#include "DrownAnalysis.h"
-#include "Img_tns.h"
-
 #include <stdio.h>
 
 #define NCNN_PROFILING
@@ -38,14 +27,6 @@
 #ifdef NCNN_PROFILING
 #include "benchmark.h"
 #endif
-
-
-using namespace yolov;
-using namespace sppeNet;
-using namespace cnnNet;
-
-#define SCREEN_W 960
-#define SCREEN_H 540
 
 std::vector<std::string> video_vector = {".mp4", ".avi", "MOV", "MP4"};
 std::vector<std::string> image_vector = {".jpg", ".png"};
@@ -67,6 +48,7 @@ int main(int argc, char** argv)
 
     int is_streaming = 0;
     int wait_key = 0;
+    int cnt = 0;
 
     if (argc < 2)
     {
@@ -131,36 +113,10 @@ int main(int argc, char** argv)
         wait_key = 1;
     }
 
-//    AIProcessor::init();
-
-    double image_height_pixel = SCREEN_H;
-    double image_width_pixel = SCREEN_W;
-
-    double w_num = 10;
-    double h_num = 10;
-
-    ncnn::Net detectnet;
-    Detector::init_detector(&detectnet);
-
-    // init cnnNet
-    static ncnn::Net cnnNet;
-    int loaded_cnn = init_CNN(&cnnNet);
-
-    // init sppe
-    static ncnn::Net sppe_Net;
-    int loaded_sppe = init_sppe(&sppe_Net);
-
-//    List list;
-    RegionProcessor RP {image_width_pixel, image_height_pixel, w_num, h_num, false};
-    DrownAnalysis analysis = DrownAnalysis{};
-
-    std::vector<std::vector<KP>> skeletons;
-    std::vector<std::vector<float>> predictions;
-    cv::Mat im_raw(image_height_pixel, image_width_pixel, CV_8UC3, cv::Scalar(0, 0, 0));
-    cv::Mat drown_frame, im_cnt; //for storing each frame and preprocessed frame;
-
+    AIProcessor::init();
     while (true)
     {
+        cnt ++;
         if (is_streaming)
         {
 #ifdef NCNN_PROFILING
@@ -181,69 +137,7 @@ int main(int argc, char** argv)
                 return -1;
             }
         }
-//        cv::Mat drown_frame = AIProcessor::process(frame);
-        drown_frame = frame.clone();
-
-        std::vector<cv::Mat> imgs;
-        std::vector<cv::Rect> b_boxes;
-        std::vector<Object> objects;
-
-        Detector::detect(frame, objects, &detectnet);
-        for (const auto& object : objects) {
-            b_boxes.push_back(object.rect);
-        }
-
-        auto start_rp = std::chrono::steady_clock::now();
-        std::vector<std::vector<std::pair<double, double>>> RP_res = RP.get_condition(b_boxes);
-        RP.update_region(RP_res);
-//        cv::Mat img_cnt = RP.draw_cnt_map(im_cnt);
-        std::chrono::duration<double> RP_duration = std::chrono::steady_clock::now() - start_rp;
-        std::cout << "[Region] Time taken for region processor: " << RP_duration.count() << "s\n";
-
-        auto start_sort = std::chrono::steady_clock::now();
-//		std::vector<std::vector<float>> untracked_boxes = utils_main.Rect2vf(b_boxes);
-        std::vector<TrackingBox> frameTrackingResult = SORT(b_boxes);
-        vis_id(frameTrackingResult, frame);
-        auto SORT_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - start_sort);
-        std::cout << "[Sort] Time taken for sort: " << SORT_duration.count() << "s\n";
-        std::vector<int> alarm_idx = RP.get_alarming_id(frameTrackingResult);
-
-        auto drown_start =  std::chrono::steady_clock::now();
-        analysis.update(frameTrackingResult, drown_frame.rows);
-        // analysis.print();
-        drown_frame = analysis.visualize(drown_frame);
-        std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
-        auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
-        std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
-
-        skeletons.clear();
-        predictions.clear();
-
-        auto crop_start = std::chrono::steady_clock::now();
-//        std::cout << frame.size << std::endl;
-//        cropImageFrom(imgs, frame, objects);
-        cropImageOriginal(imgs, frame, objects);
-        auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
-        std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
-
-        int i = 0;
-        for(auto itr = imgs.begin(); itr != imgs.end(); itr++)
-        {
-            double area = itr->size[0]*itr->size[1];
-            if(area > 10)
-            {
-                if (loaded_sppe){
-                    skeletons.push_back(sppeOneAll(*itr, sppe_Net, objects[i].rect));
-                    draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
-                }
-                if (loaded_cnn){
-                    predictions.push_back(cnn(*itr, cnnNet));
-                }
-                // print_topk(predictions[itr-imgs.begin()], 2);
-                i++;
-            }
-        }
-
+        cv::Mat drown_frame = AIProcessor::process(frame, cnt);
         if (is_streaming){
 //            cv::imshow("img_cnt", im_cnt);
         }

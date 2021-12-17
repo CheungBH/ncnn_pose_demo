@@ -18,6 +18,6 @@
 #include "net.h"
 
 namespace AIProcessor{
-    cv::Mat process(cv::Mat frame);
+    cv::Mat process(cv::Mat frame, int frame_cnt);
     void init();
 };
