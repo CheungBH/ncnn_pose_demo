@@ -142,8 +142,6 @@ void Detector::draw_objects(cv::Mat& bgr, const std::vector<Object>& objects){
                                         "teddy bear", "hair drier", "toothbrush"
     };
 
-    cv::Mat image = bgr.clone();
-
     for (size_t i = 0; i < objects.size(); i++)
     {
         const Object& obj = objects[i];
