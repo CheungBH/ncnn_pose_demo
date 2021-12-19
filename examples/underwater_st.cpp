@@ -29,7 +29,7 @@
 #endif
 
 std::vector<std::string> video_vector = {".mp4", ".avi", "MOV", "MP4"};
-std::vector<std::string> image_vector = {".jpg", ".png"};
+std::vector<std::string> image_vector = {".jpg", ".png", "JPG"};
 int min_folder_length = 5;
 
 

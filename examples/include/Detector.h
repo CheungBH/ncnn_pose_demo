@@ -19,7 +19,7 @@ namespace Detector{
     std::vector<Object> select_center(std::vector<Object> objects, int image_height, int image_width);
     std::vector<Object> select_largest(std::vector<Object> objects);
     void init_detector(ncnn::Net *net);
-    void detect(const cv::Mat &bgr, std::vector <Object> &objects, ncnn::Net *net);
+    void detect(cv::Mat &bgr, std::vector <Object> &objects, ncnn::Net *net);
     float calculate_distance(cv::Point p1, cv::Point p2);
-    cv::Mat draw_objects(const cv::Mat &bgr, const std::vector <Object> &objects);
+    void draw_objects(cv::Mat &bgr, const std::vector <Object> &objects);
 }

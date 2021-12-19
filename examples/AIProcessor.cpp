@@ -28,7 +28,7 @@ void AIProcessor::init(){
 }
 
 cv::Mat AIProcessor::process(cv::Mat frame, int frame_cnt){
-    cv::Mat drown_frame = frame.clone();
+    cv::Mat src_copy = frame.clone();
     std::vector<cv::Mat> imgs;
     std::vector<cv::Rect> b_boxes;
     std::vector<Object> objects;
@@ -56,20 +56,19 @@ cv::Mat AIProcessor::process(cv::Mat frame, int frame_cnt){
     if (frame_cnt > 1){
         //// The time of the first is too large; Needed to be solved
         auto drown_start =  std::chrono::steady_clock::now();
-        analysis.update(frameTrackingResult, drown_frame.rows);
+        analysis.update(frameTrackingResult, frame.rows);
         // analysis.print();
-        drown_frame = analysis.visualize(drown_frame);
+        frame = analysis.visualize(frame);
         std::vector<cv::Rect> drown_boxes = analysis.get_red_box();
         auto drown_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - drown_start);
         std::cout << "[Drown] Time taken for drown analysis " << drown_duration.count() << " ms" << std::endl;
-
     }
 
     skeletons.clear();
     predictions.clear();
 
     auto crop_start = std::chrono::steady_clock::now();
-    sppeNet::cropImageOriginal(imgs, frame, objects);
+    sppeNet::cropImageOriginal(imgs, src_copy, objects);
     auto crop_duration = duration_cast<milliseconds>(std::chrono::steady_clock::now() - crop_start);
     std::cout << "[Crop] Time taken for cropping box " << crop_duration.count() << " ms" << std::endl;
 
@@ -81,7 +80,7 @@ cv::Mat AIProcessor::process(cv::Mat frame, int frame_cnt){
         {
             if (loaded_sppe){
                 skeletons.push_back(sppeNet::sppeOneAll(*itr, estimator, objects[i].rect));
-                sppeNet::draw_pose(drown_frame, skeletons[itr-imgs.begin()]);
+                sppeNet::draw_pose(frame, skeletons[itr-imgs.begin()]);
             }
             if (loaded_cnn){
                 predictions.push_back(cnnNet::cnn(*itr, classifier));
@@ -90,6 +89,6 @@ cv::Mat AIProcessor::process(cv::Mat frame, int frame_cnt){
             i++;
         }
     }
-    return drown_frame;
+    return frame;
 }
 
